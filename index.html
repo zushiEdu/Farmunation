@@ -118,7 +118,7 @@
         </div>
 
         <script>
-            function implement(posx, posy, rot, active, name, bF, aF, toolType, ax, ay) {
+            function implement(posx, posy, rot, active, name, bF, aF, toolType, ax, ay, inventory) {
                 this.posx = posx;
                 this.posy = posy;
                 this.rot = rot;
@@ -129,6 +129,7 @@
                 this.toolType = toolType;
                 this.ax = ax;
                 this.ay = ay;
+                this.inventory = inventory;
             }
             function tile(state, willGrow, tillGrown, yield, cropType) {
                 this.state = state;
@@ -148,6 +149,10 @@
                 this.aoX = aoX;
                 this.aoY = aoY;
                 this.inventory = inventory;
+            }
+            function item(name, amount) {
+                this.name = name;
+                this.amount = amount;
             }
 
             const spriteSize = 16;
@@ -169,15 +174,15 @@
             var implements = new Array();
             // TO = tool offset
             //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
-            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", 0, 1, "Tractor", 0, 0);
-            implements[1] = new implement(2, 4, 90, false, "Planter", 1, 2, "Tractor", 0, 0);
-            implements[2] = new implement(2, 10, 90, false, "Corn Header", 5, 6, "Harvester", 0, 0);
-            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 1);
+            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", 0, 1, "Tractor", 0, 0, null);
+            implements[1] = new implement(2, 4, 90, false, "Planter", 1, 2, "Tractor", 0, 0, new item("Corn", 50));
+            implements[2] = new implement(2, 10, 90, false, "Corn Header", 5, 6, "Harvester", 0, 0, null);
+            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 1, null);
 
             var activeVehicle = 0;
             var vehicles = new Array();
-            vehicles[0] = new vehicle(2, 6, 90, 0, false, 100, "Tractor", 1, 1);
-            vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0);
+            vehicles[0] = new vehicle(2, 6, 90, 0, false, 100, "Tractor", 1, 1, new item("Repair Kit", 1));
+            vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0, new item("Corn", 0));
 
             // Image Section
             var matchingImage = new Array();
@@ -254,6 +259,32 @@
                     implements[3].rot
                 );
 
+                roundedRect(0, 0, 512 - 16, 20, 5, 0, 0, 0);
+                var at;
+                if (vehicles[activeVehicle].implementAttached) {
+                    if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
+                        at =
+                            ", " +
+                            implements[vehicles[activeVehicle].attachedImplement].name +
+                            ": " +
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.name +
+                            ", " +
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount;
+                    } else {
+                        at = ", " + implements[vehicles[activeVehicle].attachedImplement].name;
+                    }
+                } else {
+                    at = "";
+                }
+                drawText(
+                    vehicles[activeVehicle].name + ": " + vehicles[activeVehicle].inventory.name + ", " + vehicles[activeVehicle].inventory.amount + at,
+                    5,
+                    15,
+                    255,
+                    255,
+                    255
+                );
+
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].active) {
                         var ax = implements[vehicles[activeVehicle].attachedImplement].ax;
@@ -294,8 +325,12 @@
                         ) {
                             // plant crop on land
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
-                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] =
-                                    new tile(2, true, 5, 0.5, "Wheat");
+                                if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
+                                        implements[vehicles[activeVehicle].attachedImplement].posx
+                                    ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                                    implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                                }
                             }
                         } else if (
                             blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
@@ -320,8 +355,17 @@
                                 .state == 5
                         ) {
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Corn Header") {
-                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] =
-                                    new tile(6, false, null, null);
+                                if (vehicles[activeVehicle].inventory.name == "Corn") {
+                                    vehicles[activeVehicle].inventory.amount +=
+                                        1 *
+                                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
+                                            implements[vehicles[activeVehicle].attachedImplement].posx
+                                        ].yield;
+
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
+                                        implements[vehicles[activeVehicle].attachedImplement].posx
+                                    ] = new tile(6, false, null, null);
+                                }
                             }
                             // harvest crop
                             // calculate yield and what to deposit based on crop type
@@ -435,8 +479,6 @@
                                         vehicles[activeVehicle].attachedImplement = i;
                                     }
                                 } else if (implements[i].posx == vehicles[activeVehicle].posx) {
-                                    console.log(implements[i].posy - vehicles[activeVehicle].posy);
-                                    console.log(implements[i].rot + ", " + vehicles[activeVehicle].rotation);
                                     if (
                                         implements[i].rot == 0 &&
                                         vehicles[activeVehicle].rotation == 0 &&
@@ -503,6 +545,36 @@
 
             function findSlope(y2, y1, x2, x1) {
                 return ((y2 - y1) / (x2 - x1)) * -1;
+            }
+
+            function drawRect(x1, y1, x2, y2, r, g, b) {
+                painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
+                painter.beginPath();
+                painter.fillRect(x1, y1, x2, y2);
+                painter.closePath();
+            }
+
+            function roundedRect(x, y, width, height, radius, r, g, b) {
+                painter.beginPath();
+                painter.moveTo(x, y + radius);
+                painter.arcTo(x, y + height, x + radius, y + height, radius);
+                painter.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+                painter.arcTo(x + width, y, x + width - radius, y, radius);
+                painter.arcTo(x, y, x, y + radius, radius);
+                painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
+                painter.stroke();
+                painter.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+                painter.fill();
+                painter.closePath();
+            }
+
+            function drawText(text, x, y, r, g, b) {
+                painter.beginPath();
+                painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
+                painter.strokeText(text, x, y);
+                painter.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+                painter.fill();
+                painter.closePath();
             }
 
             function drawCircle(sX, sY, hStretch, vStretch, rotation, r, g, b) {
