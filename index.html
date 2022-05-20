@@ -5,23 +5,120 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Farmunation</title>
-        <link rel="icon" type="image/x-icon" href="/Sprites/Tractor.png" />
+        <link rel="icon" type="image/x-icon" href="/Icon.png" />
         <style>
-            body {
+            @import url("https://fonts.googleapis.com/css2?family=Barlow&family=IBM+Plex+Mono&display=swap");
+
+            html {
+                font-family: "Barlow", sans-serif;
+            }
+
+            .body {
+                --bg: #f2f2f2;
+                display: flex;
+                height: 100vh;
+                flex-direction: column;
                 margin: 0;
+                background-color: var(--bg);
+            }
+
+            .b {
+                --lnk: #465e73;
+                color: var(--lnk);
+                font-weight: 800;
+            }
+
+            div {
+                width: 55%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            ul {
+                display: flex;
+                margin: auto;
+                margin-block-start: 1em;
+                margin-block-end: 1em;
+                margin-inline-start: 0px;
+                margin-inline-end: 0px;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                padding: 0;
+            }
+
+            #main-renderer {
+                font-family: "IBM Plex Mono";
+                padding: 20px 0px;
+                font-size: 30px;
+                margin: auto;
+                width: 90%;
+                text-align: center;
+                line-height: 1.15;
+            }
+
+            .sesame-seeds {
+                --headers: #00010d;
+                color: var(--headers);
+                margin-bottom: 1;
+            }
+
+            .theme {
+                --bc: #a8b5bf;
+                border-style: hidden;
+                background-color: var(--bc);
+                border-radius: 5px;
+                padding: 15px;
+            }
+
+            .theme:active {
+                --hghltd: #728ca3;
+                background-color: var(--hghltd);
+            }
+
+            .fluff {
+                --text: #00010d;
+                color: var(--text);
+            }
+
+            #footer {
+                position: absolute;
+                bottom: 0;
+            }
+            #bottom-bun {
+                margin-top: auto;
             }
             canvas {
                 background-color: whitesmoke;
                 image-rendering: pixelated;
                 image-rendering: crisp-edges;
+                margin: auto;
+                display: block;
+                width: 100%;
+                border-radius: 2%;
             }
         </style>
     </head>
-    <body>
-        <canvas id="main" width="512" height="512"></canvas>
+    <body class="body">
+        <div id="top-bun">
+            <h1 class="sesame-seeds">Farmunation</h1>
+            <p class="fluff">update description</p>
+        </div>
+        <div>
+            <canvas id="main" width="512" height="512"></canvas>
+        </div>
+        <div id="bottom-bun">
+            <footer>
+                <ul>
+                    <p class="fluff">Started By Ethan Huber On 11/5/22</p>
+                    <a style="text-decoration: none" href="https://x.com"><p class="b">Website</p></a>
+                    <a style="text-decoration: none" href="https://github.com/zushiEdu/Farmunation"><p class="b">Farmunation</p></a>
+                    <a style="text-decoration: none" href="https://github.com/zushiEdu/"><p class="b">Github</p></a>
+                </ul>
+            </footer>
+        </div>
 
         <script>
-            function implement(posx, posy, rot, active, name, bF, aF, toolType, ax, ay, bx, by) {
+            function implement(posx, posy, rot, active, name, bF, aF, toolType, ax, ay) {
                 this.posx = posx;
                 this.posy = posy;
                 this.rot = rot;
@@ -32,8 +129,6 @@
                 this.toolType = toolType;
                 this.ax = ax;
                 this.ay = ay;
-                this.bx = bx;
-                this.by = by;
             }
             function tile(state, willGrow, tillGrown, yield, cropType) {
                 this.state = state;
@@ -59,7 +154,7 @@
 
             const c = document.getElementById("main");
             const painter = c.getContext("2d", { alpha: false });
-            //painter.scale(2, 2);
+            //painter.scale(32 / spriteSize, 32 / spriteSize);
             painter.translate(8, 8);
             painter.imageSmoothingEnabled = false;
 
@@ -74,10 +169,10 @@
             var implements = new Array();
             // TO = tool offset
             //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
-            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", 0, 1, "Tractor", 0, 0, 0, 0);
-            implements[1] = new implement(2, 4, 90, false, "Planter", 1, 2, "Tractor", 0, 0, 0, 0);
-            implements[2] = new implement(2, 10, 90, false, "Corn Header", 5, 6, "Harvester", 0, 0, 0, 0);
-            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 0, 1, 0);
+            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", 0, 1, "Tractor", 0, 0);
+            implements[1] = new implement(2, 4, 90, false, "Planter", 1, 2, "Tractor", 0, 0);
+            implements[2] = new implement(2, 10, 90, false, "Corn Header", 5, 6, "Harvester", 0, 0);
+            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 1);
 
             var activeVehicle = 0;
             var vehicles = new Array();
@@ -88,45 +183,45 @@
             var matchingImage = new Array();
 
             matchingImage[0] = new Image();
-            matchingImage[0].src = "/Sprites/Grass.png";
+            matchingImage[0].src = `/${spriteSize}xSprites/Grass.png`;
 
             matchingImage[1] = new Image();
-            matchingImage[1].src = "/Sprites/Cultivated.png";
+            matchingImage[1].src = `/${spriteSize}xSprites/Cultivated.png`;
 
             matchingImage[2] = new Image();
-            matchingImage[2].src = "/Sprites/PlantedStage1.png";
+            matchingImage[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
 
             matchingImage[3] = new Image();
-            matchingImage[3].src = "/Sprites/PlantedStage3.png";
+            matchingImage[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
 
             matchingImage[4] = new Image();
-            matchingImage[4].src = "/Sprites/PlantedStage5.png";
+            matchingImage[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
 
             matchingImage[5] = new Image();
-            matchingImage[5].src = "/Sprites/PlantedStage6.png";
+            matchingImage[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
 
             matchingImage[6] = new Image();
-            matchingImage[6].src = "/Sprites/Harvested.png";
+            matchingImage[6].src = `/${spriteSize}xSprites/Harvested.png`;
 
             var machines = new Array();
 
             machines[0] = new Image();
-            machines[0].src = "/Sprites/Tractor.png";
+            machines[0].src = `/${spriteSize}xSprites/Tractor.png`;
 
             machines[1] = new Image();
-            machines[1].src = "/Sprites/Cultivator.png";
+            machines[1].src = `/${spriteSize}xSprites/Cultivator.png`;
 
             machines[2] = new Image();
-            machines[2].src = "/Sprites/Planter.png";
+            machines[2].src = `/${spriteSize}xSprites/Planter.png`;
 
             machines[3] = new Image();
-            machines[3].src = "/Sprites/Harvester.png";
+            machines[3].src = `/${spriteSize}xSprites/Harvester.png`;
 
             machines[4] = new Image();
-            machines[4].src = "/Sprites/Corn Header.png";
+            machines[4].src = `/${spriteSize}xSprites/Corn Header.png`;
 
             machines[5] = new Image();
-            machines[5].src = "/Sprites/LargeCultivator.png";
+            machines[5].src = `/${spriteSize}xSprites/LargeCultivator.png`;
 
             var blocks = [[new tile()]];
 
@@ -141,6 +236,8 @@
             }
 
             function update() {
+                // painter.translate(vehicles[activeVehicle].posx * spriteSize - centerX, vehicles[activeVehicle].posy * spriteSize - centerY);
+
                 clearScreen();
                 updateMap();
 
@@ -150,14 +247,18 @@
                 paintImage(machines[2], spriteSize * implements[1].posx, spriteSize * implements[1].posy, implements[1].rot);
                 paintImage(machines[3], spriteSize * vehicles[1].posx, spriteSize * vehicles[1].posy, vehicles[1].rotation);
                 paintImage(machines[4], spriteSize * implements[2].posx, spriteSize * implements[2].posy, implements[2].rot);
-                paintImage(machines[5], spriteSize * implements[3].posx, spriteSize * (implements[3].posy - implements[3].bx), implements[3].rot);
+                paintImage(
+                    machines[5],
+                    spriteSize * (implements[3].posx - implements[3].ax * Math.cos(toRadian(implements[3].rot))),
+                    spriteSize * (implements[3].posy + implements[3].ay * Math.sin(toRadian(implements[3].rot))),
+                    implements[3].rot
+                );
 
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].active) {
                         var ax = implements[vehicles[activeVehicle].attachedImplement].ax;
                         var ay = implements[vehicles[activeVehicle].attachedImplement].ay;
-                        var bx = implements[vehicles[activeVehicle].attachedImplement].bx;
-                        var by = implements[vehicles[activeVehicle].attachedImplement].by;
+
                         if (
                             blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
                                 .state == 0 ||
@@ -168,12 +269,23 @@
                         ) {
                             // cultivate land
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Disc Harrow") {
-                                for (var y = ay; y <= by; y++) {
-                                    for (var x = ax; x <= bx; x++) {
-                                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy + y][
-                                            implements[vehicles[activeVehicle].attachedImplement].posx + x
-                                        ] = new tile(1, false, null, null);
-                                    }
+                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] =
+                                    new tile(1, false, null, null, "Cultivated");
+                                if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
+                                    blocks[
+                                        implements[vehicles[activeVehicle].attachedImplement].posy +
+                                            implements[3].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                    ][
+                                        implements[vehicles[activeVehicle].attachedImplement].posx -
+                                            implements[3].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                    ] = new tile(1, false, null, null, "Cultivated");
+                                    blocks[
+                                        implements[vehicles[activeVehicle].attachedImplement].posy -
+                                            implements[3].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                    ][
+                                        implements[vehicles[activeVehicle].attachedImplement].posx +
+                                            implements[3].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                    ] = new tile(1, false, null, null, "Cultivated");
                                 }
                             }
                         } else if (
@@ -220,8 +332,6 @@
 
             function input(key) {
                 if (key == "w") {
-                    console.log(vehicles[activeVehicle]);
-
                     if (vehicles[activeVehicle].aoX == 0) {
                         vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
                         vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
@@ -242,12 +352,9 @@
                     vehicles[activeVehicle].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
 
                     if (vehicles[activeVehicle].implementAttached) {
-                        implements[vehicles[activeVehicle].attachedImplement].posx += Math.round(
-                            Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot))
-                        );
-                        implements[vehicles[activeVehicle].attachedImplement].posy -= Math.round(
-                            Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot))
-                        );
+                        implements[vehicles[activeVehicle].attachedImplement].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                        implements[vehicles[activeVehicle].attachedImplement].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                        implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
                     }
                 }
                 if (key == "d") {
