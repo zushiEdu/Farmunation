@@ -171,6 +171,14 @@
             var pointerX = 0;
             var pointerY = 0;
 
+            var chunkX = 0;
+            var chunkY = 0;
+
+            const canvasSize = width / spriteSize;
+            console.log(canvasSize);
+            const mapSize = canvasSize * 8;
+            const mapScale = 8;
+
             var implements = new Array();
             // TO = tool offset
             //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
@@ -232,34 +240,35 @@
 
             function setup() {
                 // create basic map
-                for (var y = 0; y <= height / spriteSize; y++) {
+                for (var y = 0; y <= mapSize; y++) {
                     blocks[y] = [];
-                    for (var x = 0; x <= width / spriteSize; x++) {
+                    for (var x = 0; x <= mapSize; x++) {
                         blocks[y][x] = new tile(0, false, null, null);
                     }
                 }
             }
 
             function update() {
-                // painter.translate(vehicles[activeVehicle].posx * spriteSize - centerX, vehicles[activeVehicle].posy * spriteSize - centerY);
-
                 clearScreen();
                 updateMap();
 
                 //render all machines
-                paintImage(machines[0], spriteSize * vehicles[0].posx, spriteSize * vehicles[0].posy, vehicles[0].rotation);
-                paintImage(machines[1], spriteSize * implements[0].posx, spriteSize * implements[0].posy, implements[0].rot);
-                paintImage(machines[2], spriteSize * implements[1].posx, spriteSize * implements[1].posy, implements[1].rot);
-                paintImage(machines[3], spriteSize * vehicles[1].posx, spriteSize * vehicles[1].posy, vehicles[1].rotation);
-                paintImage(machines[4], spriteSize * implements[2].posx, spriteSize * implements[2].posy, implements[2].rot);
+                var osX = chunkX * spriteSize * canvasSize;
+                var osY = chunkY * spriteSize * canvasSize;
+                paintImage(machines[0], spriteSize * vehicles[0].posx - osX, spriteSize * vehicles[0].posy - osY, vehicles[0].rotation);
+                paintImage(machines[1], spriteSize * implements[0].posx - osX, spriteSize * implements[0].posy - osY, implements[0].rot);
+                paintImage(machines[2], spriteSize * implements[1].posx - osX, spriteSize * implements[1].posy - osY, implements[1].rot);
+                paintImage(machines[3], spriteSize * vehicles[1].posx - osX, spriteSize * vehicles[1].posy - osY, vehicles[1].rotation);
+                paintImage(machines[4], spriteSize * implements[2].posx - osX, spriteSize * implements[2].posy - osY, implements[2].rot);
                 paintImage(
                     machines[5],
-                    spriteSize * (implements[3].posx - implements[3].ax * Math.cos(toRadian(implements[3].rot))),
-                    spriteSize * (implements[3].posy + implements[3].ay * Math.sin(toRadian(implements[3].rot))),
+                    spriteSize * (implements[3].posx - implements[3].ax * Math.cos(toRadian(implements[3].rot))) - osX,
+                    spriteSize * (implements[3].posy + implements[3].ay * Math.sin(toRadian(implements[3].rot))) - osY,
                     implements[3].rot
                 );
 
-                roundedRect(0, 0, 512 - 16, 20, 5, 0, 0, 0);
+                roundedRect(0, 0, 512 - 16 - 100, 20, 5, 0, 0, 0);
+                roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
                 var at;
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
@@ -284,6 +293,7 @@
                     255,
                     255
                 );
+                drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
 
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].active) {
@@ -374,31 +384,67 @@
                 }
             }
 
+            function moveVehicle(f) {
+                if (f) {
+                    vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                    vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                } else {
+                    vehicles[activeVehicle].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                    vehicles[activeVehicle].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                }
+            }
+
+            function moveImplement(f) {
+                if (f) {
+                    implements[vehicles[activeVehicle].attachedImplement].posx = vehicles[activeVehicle].posx;
+                    implements[vehicles[activeVehicle].attachedImplement].posy = vehicles[activeVehicle].posy;
+                    implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                } else {
+                    implements[vehicles[activeVehicle].attachedImplement].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                    implements[vehicles[activeVehicle].attachedImplement].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                    implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                }
+            }
+
             function input(key) {
                 if (key == "w") {
                     if (vehicles[activeVehicle].aoX == 0) {
-                        vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                        vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                        var posChangeY = vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                        var posChangeX = vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                        if (posChangeY >= 0 && posChangeY < canvasSize * mapScale) {
+                            if (posChangeX >= 0 && posChangeX < canvasSize * mapScale) {
+                                moveVehicle(true);
+                            }
+                        }
+                        if (vehicles[activeVehicle].posx == (chunkX + 1) * canvasSize) {
+                            chunkX += 1;
+                        }
                     }
                     if (vehicles[activeVehicle].implementAttached) {
-                        implements[vehicles[activeVehicle].attachedImplement].posx = vehicles[activeVehicle].posx;
-                        implements[vehicles[activeVehicle].attachedImplement].posy = vehicles[activeVehicle].posy;
-                        implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                        moveImplement(true);
                     }
 
                     if (vehicles[activeVehicle].aoX != 0) {
-                        vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                        vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                        var posChangeY = vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                        var posChangeX = vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                        if (posChangeY >= 0 && posChangeY < canvasSize * mapScale) {
+                            if (posChangeX >= 0 && posChangeX < canvasSize * mapScale) {
+                                moveVehicle(true);
+                            }
+                        }
+                        if (vehicles[activeVehicle].posx == (chunkX + 1) * canvasSize) {
+                            chunkX += 1;
+                        }
+                        if (vehicles[activeVehicle].posy == (chunkY + 1) * canvasSize) {
+                            chunkY += 1;
+                        }
                     }
                 }
                 if (key == "s") {
-                    vehicles[activeVehicle].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                    vehicles[activeVehicle].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                    moveVehicle(false);
 
                     if (vehicles[activeVehicle].implementAttached) {
-                        implements[vehicles[activeVehicle].attachedImplement].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
-                        implements[vehicles[activeVehicle].attachedImplement].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                        implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                        moveImplement(false);
                     }
                 }
                 if (key == "d") {
@@ -520,9 +566,14 @@
             }
 
             function updateMap() {
-                for (var y = 0; y <= height / spriteSize; y++) {
-                    for (var x = 0; x <= width / spriteSize; x++) {
-                        paintImage(matchingImage[blocks[y][x].state], spriteSize * x, spriteSize * y, 0);
+                for (var y = chunkY * canvasSize; y <= (chunkY + 1) * canvasSize; y++) {
+                    for (var x = chunkX * canvasSize; x <= (chunkX + 1) * canvasSize; x++) {
+                        paintImage(
+                            matchingImage[blocks[y][x].state],
+                            x * spriteSize - chunkX * spriteSize * canvasSize,
+                            y * spriteSize - chunkY * spriteSize * canvasSize,
+                            0
+                        );
                     }
                 }
             }
@@ -570,10 +621,9 @@
 
             function drawText(text, x, y, r, g, b) {
                 painter.beginPath();
-                painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
-                painter.strokeText(text, x, y);
+                painter.font = "15px Arial";
                 painter.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-                painter.fill();
+                painter.fillText(text, x, y + 1);
                 painter.closePath();
             }
 
