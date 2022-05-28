@@ -175,7 +175,6 @@
             var chunkY = 0;
 
             const canvasSize = width / spriteSize;
-            console.log(canvasSize);
             const mapSize = canvasSize * 8;
             const mapScale = 8;
 
@@ -306,7 +305,9 @@
                             blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
                                 .state == 6 ||
                             blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 2
+                                .state == 2 ||
+                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
+                                .state == 1
                         ) {
                             // cultivate land
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Disc Harrow") {
@@ -507,7 +508,7 @@
                         vehicles[activeVehicle].implementAttached = false;
                     } else {
                         for (var i = 0; i < implements.length; i++) {
-                            if (implements[i].toolType == vehicles[activeVehicle].name)
+                            if (implements[i].toolType == vehicles[activeVehicle].name) {
                                 if (implements[i].posy == vehicles[activeVehicle].posy) {
                                     if (
                                         implements[i].rot == 90 &&
@@ -540,10 +541,20 @@
                                         vehicles[activeVehicle].implementAttached = true;
                                         vehicles[activeVehicle].attachedImplement = i;
                                     }
+                                } else if (
+                                    distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <=
+                                        1.5 ||
+                                    distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <=
+                                        -1.5
+                                ) {
+                                    vehicles[activeVehicle].implementAttached = true;
+                                    vehicles[activeVehicle].attachedImplement = i;
                                 }
+                            }
                         }
                     }
                 }
+
                 if (key == "e") {
                     if (activeVehicle == 0) {
                         activeVehicle = 1;
@@ -563,6 +574,10 @@
                         }
                     }
                 }
+            }
+
+            function distanceBetweenPoints(x1, y1, x2, y2) {
+                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             }
 
             function updateMap() {
