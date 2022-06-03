@@ -185,6 +185,7 @@
             implements[2] = new implement(2, 10, 90, false, "Grain Header", 5, 6, "Harvester", 0, 0, null);
             implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 1, null);
             implements[4] = new implement(2, 16, 90, false, "Grain Trailer", 0, 1, "Tractor", 0, 0, new item("Grain", 0));
+            implements[5] = new implement(2, 19, 90, false, "Planter", 0, 1, "Tractor", -1, 1, new item("Grain", 500));
 
             var activeVehicle = 0;
             var vehicles = new Array();
@@ -216,7 +217,7 @@
             matchingImage[6].src = `/${spriteSize}xSprites/Harvested.png`;
 
             var machines = new Array();
-
+            var amountOfMachines = 8;
             fillMachineArray();
 
             machines[0].src = `/${spriteSize}xSprites/Tractor.png`;
@@ -226,11 +227,12 @@
             machines[4].src = `/${spriteSize}xSprites/GrainHeader.png`;
             machines[5].src = `/${spriteSize}xSprites/LargeCultivator.png`;
             machines[6].src = `/${spriteSize}xSprites/GrainTrailer.png`;
+            machines[7].src = `/${spriteSize}xSprites/LargePlanter.png`;
 
             var blocks = [[new tile()]];
 
             function fillMachineArray() {
-                for (var i = 0; i < 7; i++) {
+                for (var i = 0; i < amountOfMachines; i++) {
                     machines[i] = new Image();
                 }
             }
@@ -265,10 +267,16 @@
                     implements[3].rot
                 );
                 paintImage(machines[6], spriteSize * implements[4].posx - osX, spriteSize * implements[4].posy - osY, implements[4].rot);
-
+                paintImage(
+                    machines[7],
+                    spriteSize * (implements[5].posx - implements[5].ax * Math.cos(toRadian(implements[5].rot))) - osX,
+                    spriteSize * (implements[5].posy + implements[5].ay * Math.sin(toRadian(implements[5].rot))) - osY,
+                    implements[5].rot
+                );
                 // ui
                 roundedRect(0, 0, 512 - 16 - 100, 20, 5, 0, 0, 0);
                 roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
+
                 var at;
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
@@ -318,17 +326,21 @@
                                 if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
                                     blocks[
                                         implements[vehicles[activeVehicle].attachedImplement].posy +
-                                            implements[3].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ][
                                         implements[vehicles[activeVehicle].attachedImplement].posx -
-                                            implements[3].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ] = new tile(1, false, null, null, "Cultivated");
                                     blocks[
                                         implements[vehicles[activeVehicle].attachedImplement].posy -
-                                            implements[3].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ][
                                         implements[vehicles[activeVehicle].attachedImplement].posx +
-                                            implements[3].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ] = new tile(1, false, null, null, "Cultivated");
                                 }
                             }
@@ -370,17 +382,65 @@
                             // harvest crop
                             // calculate yield and what to deposit based on crop type
                         }
-                        if (
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 1
-                        ) {
-                            // plant crop on land
-                            if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
-                                if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
+
+                        // plant crop on land
+                        if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
+                            if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
+                                if (
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
+                                        implements[vehicles[activeVehicle].attachedImplement].posx
+                                    ].state == 1
+                                ) {
                                     blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
                                         implements[vehicles[activeVehicle].attachedImplement].posx
                                     ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
                                     implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                                }
+                                if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
+                                    if (
+                                        blocks[
+                                            implements[vehicles[activeVehicle].attachedImplement].posy +
+                                                implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ][
+                                            implements[vehicles[activeVehicle].attachedImplement].posx -
+                                                implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ].state == 1
+                                    ) {
+                                        blocks[
+                                            implements[vehicles[activeVehicle].attachedImplement].posy +
+                                                implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ][
+                                            implements[vehicles[activeVehicle].attachedImplement].posx -
+                                                implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                                        implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                                    }
+                                    if (
+                                        blocks[
+                                            implements[vehicles[activeVehicle].attachedImplement].posy -
+                                                implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ][
+                                            implements[vehicles[activeVehicle].attachedImplement].posx +
+                                                implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ].state == 1
+                                    ) {
+                                        blocks[
+                                            implements[vehicles[activeVehicle].attachedImplement].posy -
+                                                implements[vehicles[activeVehicle].attachedImplement].ay *
+                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ][
+                                            implements[vehicles[activeVehicle].attachedImplement].posx +
+                                                implements[vehicles[activeVehicle].attachedImplement].ax *
+                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                        ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                                        implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                                    }
                                 }
                             }
                         }
@@ -575,6 +635,7 @@
                             }
                         }
                     }
+                    renderMap();
                 }
                 if (key == "r") {
                     if (vehicles[activeVehicle].name == "Harvester") {
