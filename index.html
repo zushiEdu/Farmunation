@@ -194,26 +194,15 @@
 
             // Image Section
             var matchingImage = new Array();
+            var amountOfTiles = 7;
+            fillTileArray();
 
-            matchingImage[0] = new Image();
             matchingImage[0].src = `/${spriteSize}xSprites/Grass.png`;
-
-            matchingImage[1] = new Image();
             matchingImage[1].src = `/${spriteSize}xSprites/Cultivated.png`;
-
-            matchingImage[2] = new Image();
             matchingImage[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
-
-            matchingImage[3] = new Image();
             matchingImage[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
-
-            matchingImage[4] = new Image();
             matchingImage[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
-
-            matchingImage[5] = new Image();
             matchingImage[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
-
-            matchingImage[6] = new Image();
             matchingImage[6].src = `/${spriteSize}xSprites/Harvested.png`;
 
             var machines = new Array();
@@ -230,6 +219,12 @@
             machines[7].src = `/${spriteSize}xSprites/LargePlanter.png`;
 
             var blocks = [[new tile()]];
+
+            function fillTileArray() {
+                for (var i = 0; i < amountOfTiles; i++) {
+                    matchingImage[i] = new Image();
+                }
+            }
 
             function fillMachineArray() {
                 for (var i = 0; i < amountOfMachines; i++) {
