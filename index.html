@@ -248,7 +248,7 @@
             //     new element(`Buy 1000 Units Of Grain For $${calculateGrainCost(1000)}`, "buyGrain(1000)"),
             // ]);
 
-            var farmMoney = 1000;
+            var farmMoney = 2250;
 
             function calculateGrainCost(amount) {
                 return amount * 5 - amount * 0.5;
@@ -497,10 +497,12 @@
                 for (var i = 0; i < prompts.length; i++) {
                     if (prompts[i] != null) {
                         for (var j = 0; j < prompts[i].elements.length; j++) {
-                            if (pointerX > prompts[i].posx && pointerX < prompts[i].posx + prompts[i].width) {
+                            if (pointerX > prompts[i].posx + 10 && pointerX < prompts[i].posx + prompts[i].width - 20) {
                                 // within element horizontally
-                                if (pointerY > 15 + prompts[i].posy + (j + 2) * 25 && pointerY < 40 + prompts[i].posy + (j + 2) * 25) {
+                                if (pointerY > 10 + prompts[i].posy + (j + 2) * 25 && pointerY < 35 + prompts[i].posy + (j + 2) * 25) {
                                     // within element vertically
+                                    console.log("here");
+
                                     if (prompts[i].elements[j].action != null) {
                                         // button pressed
                                         eval(`${prompts[i].elements[j].action}`);
@@ -509,11 +511,13 @@
                             }
                         }
                         console.log(pointerX + ", " + pointerY);
+                        drawRect(prompts[i].posx + 10, prompts[i].posy + 10, 20, 10, 255, 255, 255);
+
                         if (
-                            pointerX >= prompts[i].posx + 15 &&
-                            pointerX <= prompts[i].posx + 45 &&
-                            pointerY >= prompts[i].posy + 35 &&
-                            pointerY <= prompts[i].posy + 55
+                            pointerX >= prompts[i].posx + 10 &&
+                            pointerX <= prompts[i].posx + 40 &&
+                            pointerY >= prompts[i].posy + 40 &&
+                            pointerY <= prompts[i].posy + 60
                         ) {
                             prompts[i] = null;
                             renderMap();
@@ -523,10 +527,14 @@
             }
 
             function buyGrain(amount) {
-                if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter" && vehicles[activeVehicle].implementAttached) {
-                    if (farmMoney >= calculateGrainCost(amount)) {
-                        implements[vehicles[activeVehicle].attachedImplement].inventory.amount += amount;
-                        farmMoney -= calculateGrainCost(amount);
+                if (vehicles[activeVehicle].implementAttached) {
+                    if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
+                        if (farmMoney >= calculateGrainCost(amount)) {
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount += amount;
+                            farmMoney -= calculateGrainCost(amount);
+                        }
+                    } else {
+                        prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Planter Attached", null)]);
                     }
                 } else {
                     prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Planter Attached", null)]);
