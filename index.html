@@ -533,12 +533,15 @@
                         if (farmMoney >= calculateGrainCost(amount)) {
                             implements[vehicles[activeVehicle].attachedImplement].inventory.amount += amount;
                             farmMoney -= calculateGrainCost(amount);
+                            prompts[prompts.length] = new prompt(50, 225, 412, 60, [
+                                new element(`${amount} units of grain successfully bought, $${calculateGrainCost(amount)} spent`, null),
+                            ]);
                         }
                     } else {
-                        prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Planter Attached", null)]);
+                        prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Planter Not Attached", null)]);
                     }
                 } else {
-                    prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Planter Attached", null)]);
+                    prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Tool Attached", null)]);
                 }
             }
 
@@ -576,6 +579,9 @@
                         }
                         if (vehicles[activeVehicle].posx == (chunkX + 1) * canvasSize) {
                             chunkX += 1;
+                        }
+                        if (vehicles[activeVehicle].posy == (chunkY + 1) * canvasSize) {
+                            chunkY += 1;
                         }
                     }
                     if (vehicles[activeVehicle].implementAttached) {
