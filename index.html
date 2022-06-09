@@ -165,13 +165,17 @@
                 this.text = text;
                 this.action = action;
             }
+            function specialLocation(posx, posy, action) {
+                this.posx = posx;
+                this.posy = posy;
+                this.action = action;
+            }
 
             const spriteSize = 16;
             const c = document.getElementById("main");
             const button = document.querySelector("#main");
             button.addEventListener("click", mouseClick, false);
             const painter = c.getContext("2d", { alpha: false });
-            //painter.scale(32 / spriteSize, 32 / spriteSize);
             var rendererOffset = 8;
             painter.translate(rendererOffset, rendererOffset);
             painter.imageSmoothingEnabled = false;
@@ -206,24 +210,18 @@
             vehicles[0] = new vehicle(2, 6, 90, null, false, 100, "Tractor", 1, 1, null);
             vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0, new item("Grain", 0));
 
-            // Image Section
-            var cropImages = new Array();
-            var amountOfCrops = 7;
-            fillImageArray(cropImages, amountOfCrops);
+            var tileImages = new Array();
+            var amountOfCrops = 8;
+            fillImageArray(tileImages, amountOfCrops);
 
-            cropImages[0].src = `/${spriteSize}xSprites/Grass.png`;
-            cropImages[1].src = `/${spriteSize}xSprites/Cultivated.png`;
-            cropImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
-            cropImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
-            cropImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
-            cropImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
-            cropImages[6].src = `/${spriteSize}xSprites/Harvested.png`;
-
-            var specialTiles = new Array();
-            var amountOfTiles = 1;
-            fillImageArray(specialTiles, amountOfTiles);
-
-            specialTiles[0].src = `/${spriteSize}xSprites/SellPoint.png`;
+            tileImages[0].src = `/${spriteSize}xSprites/Grass.png`;
+            tileImages[1].src = `/${spriteSize}xSprites/Cultivated.png`;
+            tileImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
+            tileImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
+            tileImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
+            tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
+            tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`;
+            tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`;
 
             var machines = new Array();
             var amountOfMachines = 8;
@@ -240,16 +238,11 @@
 
             var blocks = [[new tile()]];
 
-            var prompts = new Array();
-            // prompts[0] = new prompt(50, 50, 412, 160, [
-            //     new element("Buy Grain", null),
-            //     new element(`Buy 10 Units Of Grain For $${calculateGrainCost(10)}`, "buyGrain(10)"),
-            //     new element(`Buy 100 Units Of Grain For $${calculateGrainCost(100)}`, "buyGrain(100)"),
-            //     new element(`Buy 500 Units Of Grain For $${calculateGrainCost(500)}`, "buyGrain(500)"),
-            //     new element(`Buy 1000 Units Of Grain For $${calculateGrainCost(1000)}`, "buyGrain(1000)"),
-            // ]);
+            var specialLocations = new Array();
 
-            var farmMoney = 2250;
+            var prompts = new Array();
+
+            var farmMoney = 10000;
 
             function calculateGrainCost(amount) {
                 return amount * 5 - amount * 0.5;
@@ -269,7 +262,11 @@
                         blocks[y][x] = new tile(0, false, null, null);
                     }
                 }
-                setTimeout(renderMap, 1);
+
+                // sellpoint
+                specialLocations[0] = new specialLocation(15, 30, null);
+                blocks[30][15] = new tile(7, false, null, null);
+                setTimeout(renderMap, 10);
             }
 
             function update() {
@@ -297,14 +294,25 @@
                     spriteSize * (implements[5].posy + implements[5].ay * Math.sin(toRadian(implements[5].rot))) - osY,
                     implements[5].rot
                 );
+                userInterface();
+                applyImplements();
+            }
+
+            function userInterface() {
                 // ui
                 roundedRect(0, 0, 512 - 16 - 200, 20, 5, 0, 0, 0);
                 roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
                 roundedRect(512 - 16 - 200 + 10, 0, 90, 20, 5, 0, 0, 0);
 
+                // tool display computing
                 var at;
                 var bt;
                 if (vehicles[activeVehicle].implementAttached) {
+                    if (implements[vehicles[activeVehicle].attachedImplement].active) {
+                        ct = "Tool On";
+                    } else {
+                        ct = "Tool Off";
+                    }
                     if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
                         at =
                             ", " +
@@ -312,9 +320,12 @@
                             ": " +
                             implements[vehicles[activeVehicle].attachedImplement].inventory.name +
                             ", " +
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount;
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount +
+                            " [" +
+                            ct +
+                            "]";
                     } else {
-                        at = ", " + implements[vehicles[activeVehicle].attachedImplement].name;
+                        at = ", " + implements[vehicles[activeVehicle].attachedImplement].name + " [" + ct + "]";
                     }
                 } else {
                     at = "";
@@ -325,12 +336,14 @@
                     bt = ": " + vehicles[activeVehicle].inventory.name + ", " + vehicles[activeVehicle].inventory.amount;
                 }
 
+                // tool display
                 drawText(vehicles[activeVehicle].name + bt + at, 5, 15, 255, 255, 255);
                 drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
                 drawText("$" + farmMoney, 512 - 16 - 185, 15, 255, 255, 255);
-
                 displayPrompts();
-                // implement application
+            }
+
+            function applyImplements() {
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].active) {
                         var ax = implements[vehicles[activeVehicle].attachedImplement].ax;
@@ -500,10 +513,8 @@
                         for (var j = 0; j < prompts[i].elements.length; j++) {
                             if (pointerX > prompts[i].posx + 10 && pointerX < prompts[i].posx + prompts[i].width - 20) {
                                 // within element horizontally
-                                console.log(30 * j + prompts[i].posy + ", " + (30 * j + (prompts[i].posy + 20)));
                                 if (pointerY >= 30 * (j + 1) + prompts[i].posy && pointerY <= 30 * (j + 1) + (prompts[i].posy + 20)) {
                                     // within element vertically
-                                    console.log("here");
 
                                     if (prompts[i].elements[j].action != null) {
                                         // button pressed
@@ -512,8 +523,6 @@
                                 }
                             }
                         }
-                        console.log(pointerX + ", " + pointerY);
-                        console.log(prompts[i].posx + 10);
                         if (
                             pointerX >= prompts[i].posx + 10 &&
                             pointerX <= prompts[i].posx + 40 &&
@@ -536,6 +545,8 @@
                             prompts[prompts.length] = new prompt(50, 225, 412, 60, [
                                 new element(`${amount} units of grain successfully bought, $${calculateGrainCost(amount)} spent`, null),
                             ]);
+                        } else {
+                            prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
                         }
                     } else {
                         prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Planter Not Attached", null)]);
@@ -741,12 +752,9 @@
                     if (vehicles[activeVehicle].name == "Harvester") {
                         if (implements[4].rot == vehicles[activeVehicle].rotation) {
                             // same rotation
-                            console.log(vehicles[activeVehicle].posy - implements[4].posy);
-                            console.log(vehicles[activeVehicle].posx - implements[4].posx);
                             if (implements[4].posy - vehicles[activeVehicle].posy == 1 || implements[4].posy - vehicles[activeVehicle].posy == -1) {
                                 if (implements[4].posx - vehicles[activeVehicle].posx == 0) {
                                     if (vehicles[activeVehicle].rotation == 90 || vehicles[activeVehicle].rotation == -90) {
-                                        console.log(implements[4].inventory.amount + vehicles[activeVehicle].inventory.amount);
                                         implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
                                         vehicles[activeVehicle].inventory.amount = 0;
                                     }
@@ -754,11 +762,22 @@
                             } else if (implements[4].posx - vehicles[activeVehicle].posx == 1 || implements[4].posx - vehicles[activeVehicle].posx == -1) {
                                 if (implements[4].posy - vehicles[activeVehicle].posy == 0) {
                                     if (vehicles[activeVehicle].rotation == 0 || vehicles[activeVehicle].rotation == 180) {
-                                        console.log(implements[4].inventory.amount + vehicles[activeVehicle].inventory.amount);
                                         implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
                                         vehicles[activeVehicle].inventory.amount = 0;
                                     }
                                 }
+                            }
+                        }
+                    }
+                    if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Trailer") {
+                        console.log("Here");
+                        for (var i = 0; i < specialLocations.length; i++) {
+                            if (
+                                implements[vehicles[activeVehicle].attachedImplement].posx == specialLocations[i].posx &&
+                                implements[vehicles[activeVehicle].attachedImplement].posy == specialLocations[i].posy
+                            ) {
+                                farmMoney += 3 * calculateGrainCost(implements[vehicles[activeVehicle].attachedImplement].inventory.amount);
+                                implements[vehicles[activeVehicle].attachedImplement].inventory.amount = 0;
                             }
                         }
                     }
@@ -782,7 +801,7 @@
                 for (var y = chunkY * canvasSize; y < (chunkY + 1) * canvasSize; y++) {
                     for (var x = chunkX * canvasSize; x < (chunkX + 1) * canvasSize; x++) {
                         paintImage(
-                            cropImages[blocks[y][x].state],
+                            tileImages[blocks[y][x].state],
                             x * spriteSize - chunkX * spriteSize * canvasSize,
                             y * spriteSize - chunkY * spriteSize * canvasSize,
                             0
@@ -802,7 +821,7 @@
                                 implements[i].posy + y <= mapSize
                             ) {
                                 paintImage(
-                                    cropImages[blocks[implements[i].posy + y][implements[i].posx + x].state],
+                                    tileImages[blocks[implements[i].posy + y][implements[i].posx + x].state],
                                     (implements[i].posx + x) * spriteSize - chunkX * spriteSize * canvasSize,
                                     (implements[i].posy + y) * spriteSize - chunkY * spriteSize * canvasSize,
                                     0
@@ -816,7 +835,7 @@
                         for (var x = -2; x <= 2; x++) {
                             if (vehicles[i].posx + x >= 0 && vehicles[i].posx + x <= mapSize && vehicles[i].posy + y >= 0 && vehicles[i].posy + y <= mapSize) {
                                 paintImage(
-                                    cropImages[blocks[vehicles[i].posy + y][vehicles[i].posx + x].state],
+                                    tileImages[blocks[vehicles[i].posy + y][vehicles[i].posx + x].state],
                                     (vehicles[i].posx + x) * spriteSize - chunkX * spriteSize * canvasSize,
                                     (vehicles[i].posy + y) * spriteSize - chunkY * spriteSize * canvasSize,
                                     0
@@ -944,8 +963,8 @@
                 const rect = target.getBoundingClientRect();
                 var wRatio = (rect.right - rect.left) / width;
                 var hRatio = (rect.bottom - rect.top) / height;
-                pointerX = (event.pageX - rect.left) / wRatio - window.scrollX;
-                pointerY = (event.pageY - rect.top) / hRatio - window.scrollY;
+                pointerX = (event.pageX - window.scrollX - rect.left) / wRatio;
+                pointerY = (event.pageY - window.scrollY - rect.top) / hRatio;
             };
 
             setup();
