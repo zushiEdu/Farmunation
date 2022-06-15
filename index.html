@@ -285,6 +285,21 @@
                 }
             }
 
+            function adjustChunk() {
+                if (chunkX != Math.floor(vehicles[activeVehicle].posx / canvasSize)) {
+                    renderMap();
+                } else {
+                    chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
+                    chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
+                }
+                if (chunkY != Math.floor(vehicles[activeVehicle].posy / canvasSize)) {
+                    renderMap();
+                } else {
+                    chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
+                    chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
+                }
+            }
+
             function calculateGrainCost(amount) {
                 return amount * 5 - amount * 0.5;
             }
@@ -447,6 +462,10 @@
                                 .state == 5
                         ) {
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Header") {
+                                if (vehicles[activeVehicle].inventory == null) {
+                                    vehicles[activeVehicle].inventory = new item("Grain", 0);
+                                }
+                                console.log(vehicles[activeVehicle].inventory);
                                 if (vehicles[activeVehicle].inventory.name == "Grain") {
                                     vehicles[activeVehicle].inventory.amount +=
                                         1 *
@@ -580,7 +599,11 @@
                 if (vehicles[activeVehicle].implementAttached) {
                     if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
                         if (farmMoney >= calculateGrainCost(amount)) {
+                            if (implements[vehicles[activeVehicle].attachedImplement].inventory == null) {
+                                implements[vehicles[activeVehicle].attachedImplement].inventory = new item("Grain", 0);
+                            }
                             implements[vehicles[activeVehicle].attachedImplement].inventory.amount += amount;
+
                             farmMoney -= calculateGrainCost(amount);
                             prompts[prompts.length] = new prompt(50, 225, 412, 60, [
                                 new element(`${amount} units of grain successfully bought, $${calculateGrainCost(amount)} spent`, null),
@@ -621,46 +644,23 @@
             function input(key) {
                 if (key == "w") {
                     if (vehicles[activeVehicle].aoX == 0) {
-                        var posChangeY = vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                        var posChangeX = vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
-                        if (posChangeY >= 0 && posChangeY < canvasSize * mapScale) {
-                            if (posChangeX >= 0 && posChangeX < canvasSize * mapScale) {
-                                moveVehicle(true);
-                            }
-                        }
-                        if (vehicles[activeVehicle].posx == (chunkX + 1) * canvasSize) {
-                            chunkX += 1;
-                        }
-                        if (vehicles[activeVehicle].posy == (chunkY + 1) * canvasSize) {
-                            chunkY += 1;
-                        }
+                        moveVehicle(true);
                     }
                     if (vehicles[activeVehicle].implementAttached) {
                         moveImplement(true);
                     }
 
                     if (vehicles[activeVehicle].aoX != 0) {
-                        var posChangeY = vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                        var posChangeX = vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
-                        if (posChangeY >= 0 && posChangeY < canvasSize * mapScale) {
-                            if (posChangeX >= 0 && posChangeX < canvasSize * mapScale) {
-                                moveVehicle(true);
-                            }
-                        }
-                        if (vehicles[activeVehicle].posx == (chunkX + 1) * canvasSize) {
-                            chunkX += 1;
-                        }
-                        if (vehicles[activeVehicle].posy == (chunkY + 1) * canvasSize) {
-                            chunkY += 1;
-                        }
+                        moveVehicle(true);
                     }
+                    adjustChunk();
                 }
                 if (key == "s") {
                     moveVehicle(false);
-
                     if (vehicles[activeVehicle].implementAttached) {
                         moveImplement(false);
                     }
+                    adjustChunk();
                 }
                 if (key == "d") {
                     if (vehicles[activeVehicle].aoX == 0) {
@@ -680,6 +680,7 @@
                             vehicles[activeVehicle].rotation += 45;
                         }
                     }
+                    adjustChunk();
                 }
                 if (key == "a") {
                     if (vehicles[activeVehicle].aoX == 0) {
@@ -707,6 +708,7 @@
                             }
                         }
                     }
+                    adjustChunk();
                 }
                 if (key == "v") {
                     if (vehicles[activeVehicle].implementAttached) {
@@ -718,7 +720,6 @@
                     }
                 }
                 if (key == "q") {
-                    console.log(implements[0]);
                     if (vehicles[activeVehicle].implementAttached) {
                         vehicles[activeVehicle].implementAttached = false;
                     } else {
@@ -834,7 +835,6 @@
                 if (key == "n") {
                     prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
                     for (var i = 0; i < purchaseableEquipment.length; i++) {
-                        console.log(purchaseableEquipment);
                         var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
                         prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
                     }
@@ -848,14 +848,13 @@
             }
 
             function buyEquipment(machine) {
-                console.log(machine);
                 if (farmMoney >= machine.price) {
                     if (machine.type == "vehicle") {
                         if (machine.name == "Tractor") {
                             vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 1, 1, null, machine);
                             farmMoney -= machine.price;
                         } else if (machine.name == "Harvester") {
-                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 0, 0, new item(0, "Grain"), machine);
+                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 0, 0, new item("Grain", 0), machine);
                             farmMoney -= machine.price;
                         }
                     } else if (machine.type == "implement") {
