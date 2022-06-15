@@ -170,12 +170,13 @@
                 this.posy = posy;
                 this.action = action;
             }
-            function machine(name, price, size, type, image) {
+            function machine(name, price, size, type, image, attachableTo) {
                 this.name = name;
                 this.price = price;
                 this.size = size;
                 this.type = type;
                 this.image = image;
+                this.attachableTo = attachableTo;
             }
 
             const spriteSize = 16;
@@ -234,33 +235,51 @@
 
             var prompts = new Array();
 
-            var farmMoney = 50000;
+            var farmMoney = 225000;
+
+            var implements = new Array();
+            var activeVehicle = 0;
+            var vehicles = new Array();
 
             var purchaseableEquipment = new Array();
             // list of all the machines within the game
-            purchaseableEquipment[0] = new machine("Tractor", 50000, "Small", "vehicle", machines[0]);
-            purchaseableEquipment[1] = new machine("Harvester", 75000, "Small", "vehicle", machines[3]);
-            purchaseableEquipment[2] = new machine("Grain Header", 15000, "Small", "implement", machines[4]);
-            purchaseableEquipment[3] = new machine("Disc Harrow", 25000, "Small", "implement", machines[1]);
-            purchaseableEquipment[4] = new machine("Planter", 25000, "Small", "implement", machines[2]);
-            purchaseableEquipment[5] = new machine("Grain Trailer", 25000, "Small", "implement", machines[6]);
-            purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement", machines[5]);
-            purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7]);
+            purchaseableEquipment[0] = new machine("Tractor", 50000, "Small", "vehicle", machines[0], null);
+            purchaseableEquipment[1] = new machine("Harvester", 75000, "Small", "vehicle", machines[3], null);
+            purchaseableEquipment[2] = new machine("Grain Header", 15000, "Small", "implement", machines[4], "Harvester");
+            purchaseableEquipment[3] = new machine("Disc Harrow", 25000, "Small", "implement", machines[1], "Tractor");
+            purchaseableEquipment[4] = new machine("Planter", 25000, "Small", "implement", machines[2], "Tractor");
+            purchaseableEquipment[5] = new machine("Grain Trailer", 25000, "Small", "implement", machines[6], "Tractor");
+            purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement", machines[5], "Tractor");
+            purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7], "Tractor");
 
-            var implements = new Array();
-            // TO = tool offset
-            //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
-            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", "Tractor", 0, 0, null, purchaseableEquipment[3]);
-            implements[1] = new implement(2, 4, 90, false, "Planter", "Tractor", 0, 0, new item("Grain", 50), purchaseableEquipment[4]);
-            implements[2] = new implement(2, 10, 90, false, "Grain Header", "Harvester", 0, 0, null, purchaseableEquipment[2]);
-            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", "Tractor", -1, 1, null, purchaseableEquipment[6]);
-            implements[4] = new implement(2, 16, 90, false, "Grain Trailer", "Tractor", 0, 0, new item("Grain", 0), purchaseableEquipment[5]);
-            implements[5] = new implement(2, 19, 90, false, "Planter", "Tractor", -1, 1, new item("Grain", 500), purchaseableEquipment[7]);
+            function setup() {
+                // create basic map
+                prompts[prompts.length] = new prompt(50, 60, 412, 60, [new element("Please Buy A Vehicle To Get Started", null)]);
+                showControls();
 
-            var activeVehicle = 0;
-            var vehicles = new Array();
-            vehicles[0] = new vehicle(2, 6, 90, null, false, 100, "Tractor", 1, 1, null, purchaseableEquipment[0]);
-            vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0, new item("Grain", 0), purchaseableEquipment[1]);
+                for (var y = 0; y <= mapSize; y++) {
+                    blocks[y] = [];
+                    for (var x = 0; x <= mapSize; x++) {
+                        blocks[y][x] = new tile(0, false, null, null);
+                    }
+                }
+
+                // sellpoint
+                // specialLocations[0] = new specialLocation(15, 30, null);
+                // blocks[30][15] = new tile(7, false, null, null);
+                setTimeout(renderMap, 100);
+            }
+
+            function update() {
+                if (vehicles[0] == null) {
+                    userInterface();
+                } else {
+                    updateMap();
+                    paintMachines();
+                    userInterface();
+                    applyImplements();
+                }
+            }
 
             function calculateGrainCost(amount) {
                 return amount * 5 - amount * 0.5;
@@ -272,58 +291,24 @@
                 }
             }
 
-            function setup() {
-                // create basic map
-                for (var y = 0; y <= mapSize; y++) {
-                    blocks[y] = [];
-                    for (var x = 0; x <= mapSize; x++) {
-                        blocks[y][x] = new tile(0, false, null, null);
-                    }
-                }
-
-                // sellpoint
-                specialLocations[0] = new specialLocation(15, 30, null);
-                blocks[30][15] = new tile(7, false, null, null);
-                setTimeout(renderMap, 100);
-            }
-
-            function update() {
-                updateMap();
-
-                //render all machines
-                var osX = chunkX * spriteSize * canvasSize;
-                var osY = chunkY * spriteSize * canvasSize;
-                paintImage(machines[0], spriteSize * vehicles[0].posx - osX, spriteSize * vehicles[0].posy - osY, vehicles[0].rotation);
-                paintImage(machines[1], spriteSize * implements[0].posx - osX, spriteSize * implements[0].posy - osY, implements[0].rot);
-                paintImage(machines[2], spriteSize * implements[1].posx - osX, spriteSize * implements[1].posy - osY, implements[1].rot);
-                paintImage(machines[3], spriteSize * vehicles[1].posx - osX, spriteSize * vehicles[1].posy - osY, vehicles[1].rotation);
-                paintImage(machines[4], spriteSize * implements[2].posx - osX, spriteSize * implements[2].posy - osY, implements[2].rot);
-                paintImage(
-                    machines[5],
-                    spriteSize * (implements[3].posx - implements[3].ax * Math.cos(toRadian(implements[3].rot))) - osX,
-                    spriteSize * (implements[3].posy + implements[3].ay * Math.sin(toRadian(implements[3].rot))) - osY,
-                    implements[3].rot
-                );
-                paintImage(machines[6], spriteSize * implements[4].posx - osX, spriteSize * implements[4].posy - osY, implements[4].rot);
-                paintImage(
-                    machines[7],
-                    spriteSize * (implements[5].posx - implements[5].ax * Math.cos(toRadian(implements[5].rot))) - osX,
-                    spriteSize * (implements[5].posy + implements[5].ay * Math.sin(toRadian(implements[5].rot))) - osY,
-                    implements[5].rot
-                );
-
-                paintMachines();
-                userInterface();
-                applyImplements();
+            function showControls() {
+                prompts[prompts.length] = new prompt(50, 130, 412, 210, [
+                    new element("N Shows Vehicle Buy Menu"),
+                    new element("B Shows Seed Buy Menu"),
+                    new element("P Re-Renders The Screen"),
+                    new element("E Switches Vehicles"),
+                    new element("Q Attaches Implements"),
+                    new element("V Activates Implements"),
+                    new element("C Shows Controls"),
+                ]);
             }
 
             function paintMachines() {
-                for (var i = 0; i < purchaseableEquipment.length; i++) {
-                    if ((purchaseableEquipment[i].type = "vehicle")) {
-                        paintMachine(vehicles[i]);
-                    } else if ((purchaseableEquipment[i].type = "implement")) {
-                        paintMachine(implements[i]);
-                    }
+                for (var i = 0; i < vehicles.length; i++) {
+                    paintMachine(vehicles[i]);
+                }
+                for (var i = 0; i < implements.length; i++) {
+                    paintMachine(implements[i]);
                 }
             }
 
@@ -340,7 +325,7 @@
                             object.rot
                         );
                     } else {
-                        paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rotation);
+                        paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rot);
                     }
                 } else if (object.reference.type == "vehicle") {
                     paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rotation);
@@ -349,46 +334,48 @@
 
             function userInterface() {
                 // ui
-                roundedRect(0, 0, 512 - 16 - 200, 20, 5, 0, 0, 0);
+                roundedRect(0, 0, 512 - 16 - 100, 20, 5, 0, 0, 0);
                 roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
-                roundedRect(512 - 16 - 200 + 10, 0, 90, 20, 5, 0, 0, 0);
+                roundedRect(512 - 16 - 100 + 10, 25, 90, 20, 5, 0, 0, 0);
 
                 // tool display computing
                 var at;
                 var bt;
-                if (vehicles[activeVehicle].implementAttached) {
-                    if (implements[vehicles[activeVehicle].attachedImplement].active) {
-                        ct = "Tool On";
+                if (vehicles[0] != null) {
+                    if (vehicles[activeVehicle].implementAttached) {
+                        if (implements[vehicles[activeVehicle].attachedImplement].active) {
+                            ct = "Tool On";
+                        } else {
+                            ct = "Tool Off";
+                        }
+                        if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
+                            at =
+                                ", " +
+                                implements[vehicles[activeVehicle].attachedImplement].name +
+                                ": " +
+                                implements[vehicles[activeVehicle].attachedImplement].inventory.name +
+                                ", " +
+                                implements[vehicles[activeVehicle].attachedImplement].inventory.amount +
+                                " [" +
+                                ct +
+                                "]";
+                        } else {
+                            at = ", " + implements[vehicles[activeVehicle].attachedImplement].name + " [" + ct + "]";
+                        }
                     } else {
-                        ct = "Tool Off";
+                        at = "";
                     }
-                    if (implements[vehicles[activeVehicle].attachedImplement].inventory != null) {
-                        at =
-                            ", " +
-                            implements[vehicles[activeVehicle].attachedImplement].name +
-                            ": " +
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.name +
-                            ", " +
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount +
-                            " [" +
-                            ct +
-                            "]";
+                    if (vehicles[activeVehicle].inventory == null) {
+                        bt = "";
                     } else {
-                        at = ", " + implements[vehicles[activeVehicle].attachedImplement].name + " [" + ct + "]";
+                        bt = ": " + vehicles[activeVehicle].inventory.name + ", " + vehicles[activeVehicle].inventory.amount;
                     }
-                } else {
-                    at = "";
-                }
-                if (vehicles[activeVehicle].inventory == null) {
-                    bt = "";
-                } else {
-                    bt = ": " + vehicles[activeVehicle].inventory.name + ", " + vehicles[activeVehicle].inventory.amount;
-                }
 
-                // tool display
-                drawText(vehicles[activeVehicle].name + bt + at, 5, 15, 255, 255, 255);
-                drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
-                drawText("$" + farmMoney, 512 - 16 - 185, 15, 255, 255, 255);
+                    // tool display
+                    drawText(vehicles[activeVehicle].name + bt + at, 5, 15, 255, 255, 255);
+                    drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
+                }
+                drawText("$" + farmMoney, 512 - 16 - 80, 40, 255, 255, 255);
                 displayPrompts();
             }
 
@@ -727,6 +714,7 @@
                     }
                 }
                 if (key == "q") {
+                    console.log(implements[0]);
                     if (vehicles[activeVehicle].implementAttached) {
                         vehicles[activeVehicle].implementAttached = false;
                     } else {
@@ -778,8 +766,8 @@
                     }
                 }
                 if (key == "e") {
-                    if (activeVehicle == 0) {
-                        activeVehicle = 1;
+                    if (activeVehicle < vehicles.length - 1) {
+                        activeVehicle++;
                     } else {
                         activeVehicle = 0;
                     }
@@ -819,7 +807,6 @@
                         }
                     }
                     if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Trailer") {
-                        console.log("Here");
                         for (var i = 0; i < specialLocations.length; i++) {
                             if (
                                 implements[vehicles[activeVehicle].attachedImplement].posx == specialLocations[i].posx &&
@@ -843,9 +830,16 @@
                 if (key == "n") {
                     prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
                     for (var i = 0; i < purchaseableEquipment.length; i++) {
+                        console.log(purchaseableEquipment);
                         var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
                         prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
                     }
+                }
+                if (key == "p") {
+                    renderMap();
+                }
+                if (key == "c") {
+                    showControls();
                 }
             }
 
@@ -854,15 +848,19 @@
                 if (farmMoney >= machine.price) {
                     if (machine.type == "vehicle") {
                         if (machine.name == "Tractor") {
-                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 1, 1, null);
+                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 1, 1, null, machine);
+                            farmMoney -= machine.price;
                         } else if (machine.name == "Harvester") {
-                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 0, 0, new item(0, "Grain"));
+                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 0, 0, new item(0, "Grain"), machine);
+                            farmMoney -= machine.price;
                         }
                     } else if (machine.type == "implement") {
                         if (machine.size == "Small") {
-                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, "Tractor", 0, 0, null);
+                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 0, 0, null, machine);
+                            farmMoney -= machine.price;
                         } else if (machine.size == "Large") {
-                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, "Tractor", -1, 1, null);
+                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, -1, 1, null, machine);
+                            farmMoney -= machine.price;
                         }
                     }
                 } else {
@@ -988,42 +986,6 @@
                 painter.lineTo(eX, eY);
                 painter.closePath();
                 painter.stroke();
-            }
-
-            function inteceptCircleLineSeg(radius, circleX, circleY, ax, ay, bx, by) {
-                var a, b, c, d, u1, u2, ret, retP1, retP2, v1, v2;
-                v1 = {};
-                v2 = {};
-                v1.x = bx - ax;
-                v1.y = by - ay;
-                v2.x = ax - circleX;
-                v2.y = ay - circleY;
-                b = v1.x * v2.x + v1.y * v2.y;
-                c = 2 * (v1.x * v1.x + v1.y * v1.y);
-                b *= -2;
-                d = Math.sqrt(b * b - 2 * c * (v2.x * v2.x + v2.y * v2.y - radius * radius));
-                if (isNaN(d)) {
-                    // no intercept
-                    return [];
-                }
-                u1 = (b - d) / c; // these represent the unit distance of point one and two on the line
-                u2 = (b + d) / c;
-                retP1 = {}; // return points
-                retP2 = {};
-                ret = []; // return array
-                if (u1 <= 1 && u1 >= 0) {
-                    // add point if on the line segment
-                    retP1.x = ax + v1.x * u1;
-                    retP1.y = ay + v1.y * u1;
-                    ret[0] = retP1;
-                }
-                if (u2 <= 1 && u2 >= 0) {
-                    // second add point if on the line segment
-                    retP2.x = ax + v1.x * u2;
-                    retP2.y = ay + v1.y * u2;
-                    ret[ret.length] = retP2;
-                }
-                return ret;
             }
 
             document.addEventListener(
