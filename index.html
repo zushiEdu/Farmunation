@@ -118,18 +118,17 @@
         </div>
 
         <script>
-            function implement(posx, posy, rot, active, name, bF, aF, toolType, ax, ay, inventory) {
+            function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, reference) {
                 this.posx = posx;
                 this.posy = posy;
                 this.rot = rot;
                 this.active = active;
                 this.name = name;
-                this.bF = bF;
-                this.aF = aF;
                 this.toolType = toolType;
                 this.ax = ax;
                 this.ay = ay;
                 this.inventory = inventory;
+                this.reference = reference;
             }
             function tile(state, willGrow, tillGrown, yield, cropType) {
                 this.state = state;
@@ -138,7 +137,7 @@
                 this.yield = yield;
                 this.cropType = cropType;
             }
-            function vehicle(posx, posy, rotation, attachedImplement, implementAttached, fuel, name, aoX, aoY, inventory) {
+            function vehicle(posx, posy, rotation, attachedImplement, implementAttached, fuel, name, aoX, aoY, inventory, reference) {
                 this.posx = posx;
                 this.posy = posy;
                 this.rotation = rotation;
@@ -149,6 +148,7 @@
                 this.aoX = aoX;
                 this.aoY = aoY;
                 this.inventory = inventory;
+                this.reference = reference;
             }
             function item(name, amount) {
                 this.name = name;
@@ -169,6 +169,13 @@
                 this.posx = posx;
                 this.posy = posy;
                 this.action = action;
+            }
+            function machine(name, price, size, type, image) {
+                this.name = name;
+                this.price = price;
+                this.size = size;
+                this.type = type;
+                this.image = image;
             }
 
             const spriteSize = 16;
@@ -194,21 +201,6 @@
             const canvasSize = width / spriteSize;
             const mapSize = canvasSize * 8;
             const mapScale = 8;
-
-            var implements = new Array();
-            // TO = tool offset
-            //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
-            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", 0, 1, "Tractor", 0, 0, null);
-            implements[1] = new implement(2, 4, 90, false, "Planter", 1, 2, "Tractor", 0, 0, new item("Grain", 50));
-            implements[2] = new implement(2, 10, 90, false, "Grain Header", 5, 6, "Harvester", 0, 0, null);
-            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", 0, 1, "Tractor", -1, 1, null);
-            implements[4] = new implement(2, 16, 90, false, "Grain Trailer", 0, 1, "Tractor", 0, 0, new item("Grain", 0));
-            implements[5] = new implement(2, 19, 90, false, "Planter", 0, 1, "Tractor", -1, 1, new item("Grain", 500));
-
-            var activeVehicle = 0;
-            var vehicles = new Array();
-            vehicles[0] = new vehicle(2, 6, 90, null, false, 100, "Tractor", 1, 1, null);
-            vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0, new item("Grain", 0));
 
             var tileImages = new Array();
             var amountOfCrops = 8;
@@ -242,7 +234,33 @@
 
             var prompts = new Array();
 
-            var farmMoney = 10000;
+            var farmMoney = 50000;
+
+            var purchaseableEquipment = new Array();
+            // list of all the machines within the game
+            purchaseableEquipment[0] = new machine("Tractor", 50000, "Small", "vehicle", machines[0]);
+            purchaseableEquipment[1] = new machine("Harvester", 75000, "Small", "vehicle", machines[3]);
+            purchaseableEquipment[2] = new machine("Grain Header", 15000, "Small", "implement", machines[4]);
+            purchaseableEquipment[3] = new machine("Disc Harrow", 25000, "Small", "implement", machines[1]);
+            purchaseableEquipment[4] = new machine("Planter", 25000, "Small", "implement", machines[2]);
+            purchaseableEquipment[5] = new machine("Grain Trailer", 25000, "Small", "implement", machines[6]);
+            purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement", machines[5]);
+            purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7]);
+
+            var implements = new Array();
+            // TO = tool offset
+            //                            X, Y, R,  On,    Name,        TOX,TOY, Matching Vehicle
+            implements[0] = new implement(2, 2, 90, false, "Disc Harrow", "Tractor", 0, 0, null, purchaseableEquipment[3]);
+            implements[1] = new implement(2, 4, 90, false, "Planter", "Tractor", 0, 0, new item("Grain", 50), purchaseableEquipment[4]);
+            implements[2] = new implement(2, 10, 90, false, "Grain Header", "Harvester", 0, 0, null, purchaseableEquipment[2]);
+            implements[3] = new implement(2, 13, 90, false, "Disc Harrow", "Tractor", -1, 1, null, purchaseableEquipment[6]);
+            implements[4] = new implement(2, 16, 90, false, "Grain Trailer", "Tractor", 0, 0, new item("Grain", 0), purchaseableEquipment[5]);
+            implements[5] = new implement(2, 19, 90, false, "Planter", "Tractor", -1, 1, new item("Grain", 500), purchaseableEquipment[7]);
+
+            var activeVehicle = 0;
+            var vehicles = new Array();
+            vehicles[0] = new vehicle(2, 6, 90, null, false, 100, "Tractor", 1, 1, null, purchaseableEquipment[0]);
+            vehicles[1] = new vehicle(2, 8, 90, null, false, 100, "Harvester", 0, 0, new item("Grain", 0), purchaseableEquipment[1]);
 
             function calculateGrainCost(amount) {
                 return amount * 5 - amount * 0.5;
@@ -270,7 +288,6 @@
             }
 
             function update() {
-                // rendering
                 updateMap();
 
                 //render all machines
@@ -294,8 +311,40 @@
                     spriteSize * (implements[5].posy + implements[5].ay * Math.sin(toRadian(implements[5].rot))) - osY,
                     implements[5].rot
                 );
+
+                paintMachines();
                 userInterface();
                 applyImplements();
+            }
+
+            function paintMachines() {
+                for (var i = 0; i < purchaseableEquipment.length; i++) {
+                    if ((purchaseableEquipment[i].type = "vehicle")) {
+                        paintMachine(vehicles[i]);
+                    } else if ((purchaseableEquipment[i].type = "implement")) {
+                        paintMachine(implements[i]);
+                    }
+                }
+            }
+
+            function paintMachine(object) {
+                var osX = chunkX * spriteSize * canvasSize;
+                var osY = chunkY * spriteSize * canvasSize;
+
+                if (object.reference.type == "implement") {
+                    if (object.ax != 0 && object.ay != 0) {
+                        paintImage(
+                            object.reference.image,
+                            spriteSize * (object.posx - object.ax * Math.cos(toRadian(object.rot))) - osX,
+                            spriteSize * (object.posy + object.ay * Math.sin(toRadian(object.rot))) - osY,
+                            object.rot
+                        );
+                    } else {
+                        paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rotation);
+                    }
+                } else if (object.reference.type == "vehicle") {
+                    paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rotation);
+                }
             }
 
             function userInterface() {
@@ -513,7 +562,7 @@
                         for (var j = 0; j < prompts[i].elements.length; j++) {
                             if (pointerX > prompts[i].posx + 10 && pointerX < prompts[i].posx + prompts[i].width - 20) {
                                 // within element horizontally
-                                if (pointerY >= 30 * (j + 1) + prompts[i].posy && pointerY <= 30 * (j + 1) + (prompts[i].posy + 20)) {
+                                if (pointerY > 10 + prompts[i].posy + (j + 1) * 25 && pointerY < 30 + prompts[i].posy + (j + 1) * 25) {
                                     // within element vertically
 
                                     if (prompts[i].elements[j].action != null) {
@@ -790,6 +839,34 @@
                         new element(`Buy 500 Units Of Grain For $${calculateGrainCost(500)}`, "buyGrain(500)"),
                         new element(`Buy 1000 Units Of Grain For $${calculateGrainCost(1000)}`, "buyGrain(1000)"),
                     ]);
+                }
+                if (key == "n") {
+                    prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
+                    for (var i = 0; i < purchaseableEquipment.length; i++) {
+                        var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
+                        prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
+                    }
+                }
+            }
+
+            function buyEquipment(machine) {
+                console.log(machine);
+                if (farmMoney >= machine.price) {
+                    if (machine.type == "vehicle") {
+                        if (machine.name == "Tractor") {
+                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 1, 1, null);
+                        } else if (machine.name == "Harvester") {
+                            vehicles[vehicles.length] = new vehicle(30, 3, -90, null, null, 100, machine.name, 0, 0, new item(0, "Grain"));
+                        }
+                    } else if (machine.type == "implement") {
+                        if (machine.size == "Small") {
+                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, "Tractor", 0, 0, null);
+                        } else if (machine.size == "Large") {
+                            implements[implements.length] = new implement(30, 3, -90, null, machine.name, "Tractor", -1, 1, null);
+                        }
+                    }
+                } else {
+                    prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
                 }
             }
 
