@@ -653,6 +653,9 @@
             }
 
             function input(key) {
+                if (key == "x") {
+                    screenshot();
+                }
                 if (key == "w") {
                     if (vehicles[activeVehicle].aoX == 0) {
                         moveVehicle(true);
