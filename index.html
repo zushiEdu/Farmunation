@@ -62,7 +62,7 @@
                 margin-bottom: 1;
             }
 
-            .theme {
+            .screenshot {
                 --bc: #a8b5bf;
                 border-style: hidden;
                 background-color: var(--bc);
@@ -101,6 +101,7 @@
     <body class="body">
         <div id="top-bun">
             <h1 class="sesame-seeds">Farmunation</h1>
+            <button class="screenshot" onclick="screenshot()"><p class="fluff" style="margin: 0">Take screenshot</p></button>
             <p class="fluff">update description</p>
         </div>
         <div>
@@ -283,6 +284,16 @@
                     userInterface();
                     applyImplements();
                 }
+            }
+
+            function screenshot() {
+                let canvasUrl = c.toDataURL();
+                const createEl = document.createElement("a");
+                createEl.href = canvasUrl;
+                var todayDate = new Date().toISOString().slice(0, 10);
+                createEl.download = `Screenshot_${todayDate}`;
+                createEl.click();
+                createEl.remove();
             }
 
             function adjustChunk() {
