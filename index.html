@@ -244,7 +244,7 @@
             var specialLocations = new Array();
 
             var normalPrompts = new Array();
-
+            var buildPrompts = new Array();
             var farmMoney = 225000;
 
             var implements = new Array();
@@ -304,7 +304,9 @@
                 }
             }
 
-            function buildUserInterface() {}
+            function buildUserInterface() {
+                displayBuildPrompts();
+            }
 
             function screenshot() {
                 let canvasUrl = c.toDataURL();
@@ -570,6 +572,25 @@
                 }
             }
 
+            function displayBuildPrompts() {
+                for (var i = 0; i < buildPrompts.length; i++) {
+                    if (buildPrompts[i] != null) {
+                        roundedRect(buildPrompts[i].posx, buildPrompts[i].posy, buildPrompts[i].width, buildPrompts[i].height, 5, 0, 0, 0);
+                        roundedRect(buildPrompts[i].posx + 10, buildPrompts[i].posy + 10, 20, 14, 7, 255, 0, 0);
+                        drawText("X", buildPrompts[i].posx + 15, buildPrompts[i].posy + 10 + 11, 255, 255, 255);
+                        for (var j = 0; j < buildPrompts[i].elements.length; j++) {
+                            if (buildPrompts[i].elements[j].action == null) {
+                                roundedRect(buildPrompts[i].posx + 10, 5 + buildPrompts[i].posy + (j + 1) * 25, buildPrompts[i].width - 20, 20, 8, 50, 50, 50);
+                                drawText(buildPrompts[i].elements[j].text, buildPrompts[i].posx + 20, 20 + buildPrompts[i].posy + (j + 1) * 25, 255, 255, 255);
+                            } else if (buildPrompts[i].elements[j].action != null) {
+                                roundedRect(buildPrompts[i].posx + 10, 5 + buildPrompts[i].posy + (j + 1) * 25, buildPrompts[i].width - 20, 20, 8, 100, 100, 100);
+                                drawText(buildPrompts[i].elements[j].text, buildPrompts[i].posx + 20, 20 + buildPrompts[i].posy + (j + 1) * 25, 255, 255, 255);
+                            }
+                        }
+                    }
+                }
+            }
+
             function mouseClick() {
                 for (var i = 0; i < normalPrompts.length; i++) {
                     if (normalPrompts[i] != null) {
@@ -588,6 +609,27 @@
                         }
                         if (pointerX >= normalPrompts[i].posx + 10 && pointerX <= normalPrompts[i].posx + 40 && pointerY >= normalPrompts[i].posy + 10 && pointerY <= normalPrompts[i].posy + 30) {
                             normalPrompts[i] = null;
+                            renderMap();
+                        }
+                    }
+                }
+                for (var i = 0; i < buildPrompts.length; i++) {
+                    if (buildPrompts[i] != null) {
+                        for (var j = 0; j < buildPrompts[i].elements.length; j++) {
+                            if (pointerX > buildPrompts[i].posx + 10 && pointerX < buildPrompts[i].posx + buildPrompts[i].width - 20) {
+                                // within element horizontally
+                                if (pointerY > 10 + buildPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + buildPrompts[i].posy + (j + 1) * 25) {
+                                    // within element vertically
+
+                                    if (buildPrompts[i].elements[j].action != null) {
+                                        // button pressed
+                                        eval(`${buildPrompts[i].elements[j].action}`);
+                                    }
+                                }
+                            }
+                        }
+                        if (pointerX >= buildPrompts[i].posx + 10 && pointerX <= buildPrompts[i].posx + 40 && pointerY >= buildPrompts[i].posy + 10 && pointerY <= buildPrompts[i].posy + 30) {
+                            buildPrompts[i] = null;
                             renderMap();
                         }
                     }
@@ -843,7 +885,7 @@
                             renderMode = "Normal";
                         } else {
                             renderMode = "Build";
-                            buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 50, [new element("1. Fence", null)]);
+                            buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 60, [new element("1. Fence", null)]);
                         }
                         renderMap();
                         break;
