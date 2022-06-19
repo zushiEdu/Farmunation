@@ -243,7 +243,7 @@
 
             var specialLocations = new Array();
 
-            var prompts = new Array();
+            var normalPrompts = new Array();
 
             var farmMoney = 225000;
 
@@ -270,7 +270,7 @@
                     renderMode = "Setup";
                 }
                 // create basic map
-                prompts[prompts.length] = new prompt(50, 60, 412, 60, [new element("Please Buy A Vehicle To Get Started", null)]);
+                normalPrompts[normalPrompts.length] = new prompt(50, 60, 412, 60, [new element("Please Buy A Vehicle To Get Started", null)]);
                 showControls();
 
                 for (var y = 0; y <= mapSize; y++) {
@@ -291,17 +291,20 @@
 
             function update() {
                 if (renderMode == "Setup") {
-                    userInterface();
+                    normalUserInterface();
                 } else if (renderMode == "Normal") {
                     updateMap();
                     paintMachines();
-                    userInterface();
+                    normalUserInterface();
                     applyImplements();
                 } else if (renderMode == "Build") {
                     updateMap();
                     paintMachines();
+                    buildUserInterface();
                 }
             }
+
+            function buildUserInterface() {}
 
             function screenshot() {
                 let canvasUrl = c.toDataURL();
@@ -339,7 +342,7 @@
             }
 
             function showControls() {
-                prompts[prompts.length] = new prompt(50, 130, 412, 210, [
+                normalPrompts[normalPrompts.length] = new prompt(50, 130, 412, 210, [
                     new element("N Shows Vehicle Buy Menu"),
                     new element("B Shows Seed Buy Menu"),
                     new element("P Re-Renders The Screen"),
@@ -379,7 +382,7 @@
                 }
             }
 
-            function userInterface() {
+            function normalUserInterface() {
                 // ui
                 roundedRect(0, 0, 512 - 16 - 100, 20, 5, 0, 0, 0);
                 roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
@@ -423,7 +426,7 @@
                     drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
                 }
                 drawText("$" + farmMoney, 512 - 16 - 80, 40, 255, 255, 255);
-                displayPrompts();
+                displayNormalPrompts();
             }
 
             function applyImplements() {
@@ -433,62 +436,48 @@
                         var ay = implements[vehicles[activeVehicle].attachedImplement].ay;
 
                         if (
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 0 ||
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 6 ||
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 2 ||
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 1
+                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 0 ||
+                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 6 ||
+                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2 ||
+                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1
                         ) {
                             // cultivate land
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Disc Harrow") {
-                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] =
-                                    new tile(1, false, null, null, "Cultivated");
+                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
+                                    1,
+                                    false,
+                                    null,
+                                    null,
+                                    "Cultivated"
+                                );
                                 if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
                                     blocks[
                                         implements[vehicles[activeVehicle].attachedImplement].posy +
-                                            implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ][
                                         implements[vehicles[activeVehicle].attachedImplement].posx -
-                                            implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ] = new tile(1, false, null, null, "Cultivated");
                                     blocks[
                                         implements[vehicles[activeVehicle].attachedImplement].posy -
-                                            implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ][
                                         implements[vehicles[activeVehicle].attachedImplement].posx +
-                                            implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                            implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                     ] = new tile(1, false, null, null, "Cultivated");
                                 }
                             }
-                        } else if (
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 2
-                        ) {
+                        } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2) {
                             // fertilize crop
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Sprayer") {
-                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] =
-                                    new tile(
-                                        2,
-                                        true,
-                                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                            implements[vehicles[activeVehicle].attachedImplement].posx
-                                        ].yield + 0.25,
-                                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                            implements[vehicles[activeVehicle].attachedImplement].posx
-                                        ].cropType
-                                    );
+                                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
+                                    2,
+                                    true,
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield + 0.25,
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].cropType
+                                );
                             }
-                        } else if (
-                            blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx]
-                                .state == 5
-                        ) {
+                        } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 5) {
                             if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Header") {
                                 if (vehicles[activeVehicle].inventory == null) {
                                     vehicles[activeVehicle].inventory = new item("Grain", 0);
@@ -496,14 +485,9 @@
                                 console.log(vehicles[activeVehicle].inventory);
                                 if (vehicles[activeVehicle].inventory.name == "Grain") {
                                     vehicles[activeVehicle].inventory.amount +=
-                                        1 *
-                                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                            implements[vehicles[activeVehicle].attachedImplement].posx
-                                        ].yield;
+                                        1 * blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield;
 
-                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                        implements[vehicles[activeVehicle].attachedImplement].posx
-                                    ] = new tile(6, false, null, null);
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(6, false, null, null);
                                 }
                             }
                             // harvest crop
@@ -513,58 +497,50 @@
                         // plant crop on land
                         if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
                             if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
-                                if (
-                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                        implements[vehicles[activeVehicle].attachedImplement].posx
-                                    ].state == 1
-                                ) {
-                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][
-                                        implements[vehicles[activeVehicle].attachedImplement].posx
-                                    ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                                if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1) {
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
+                                        2,
+                                        true,
+                                        5,
+                                        0.5,
+                                        implements[vehicles[activeVehicle].attachedImplement].inventory.name
+                                    );
                                     implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
                                 }
                                 if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
                                     if (
                                         blocks[
                                             implements[vehicles[activeVehicle].attachedImplement].posy +
-                                                implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ][
                                             implements[vehicles[activeVehicle].attachedImplement].posx -
-                                                implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ].state == 1
                                     ) {
                                         blocks[
                                             implements[vehicles[activeVehicle].attachedImplement].posy +
-                                                implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ][
                                             implements[vehicles[activeVehicle].attachedImplement].posx -
-                                                implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
                                         implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
                                     }
                                     if (
                                         blocks[
                                             implements[vehicles[activeVehicle].attachedImplement].posy -
-                                                implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ][
                                             implements[vehicles[activeVehicle].attachedImplement].posx +
-                                                implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ].state == 1
                                     ) {
                                         blocks[
                                             implements[vehicles[activeVehicle].attachedImplement].posy -
-                                                implements[vehicles[activeVehicle].attachedImplement].ay *
-                                                    Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ][
                                             implements[vehicles[activeVehicle].attachedImplement].posx +
-                                                implements[vehicles[activeVehicle].attachedImplement].ax *
-                                                    Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
                                         ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
                                         implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
                                     }
@@ -575,19 +551,19 @@
                 }
             }
 
-            function displayPrompts() {
-                for (var i = 0; i < prompts.length; i++) {
-                    if (prompts[i] != null) {
-                        roundedRect(prompts[i].posx, prompts[i].posy, prompts[i].width, prompts[i].height, 5, 0, 0, 0);
-                        roundedRect(prompts[i].posx + 10, prompts[i].posy + 10, 20, 14, 7, 255, 0, 0);
-                        drawText("X", prompts[i].posx + 15, prompts[i].posy + 10 + 11, 255, 255, 255);
-                        for (var j = 0; j < prompts[i].elements.length; j++) {
-                            if (prompts[i].elements[j].action == null) {
-                                roundedRect(prompts[i].posx + 10, 5 + prompts[i].posy + (j + 1) * 25, prompts[i].width - 20, 20, 8, 50, 50, 50);
-                                drawText(prompts[i].elements[j].text, prompts[i].posx + 20, 20 + prompts[i].posy + (j + 1) * 25, 255, 255, 255);
-                            } else if (prompts[i].elements[j].action != null) {
-                                roundedRect(prompts[i].posx + 10, 5 + prompts[i].posy + (j + 1) * 25, prompts[i].width - 20, 20, 8, 100, 100, 100);
-                                drawText(prompts[i].elements[j].text, prompts[i].posx + 20, 20 + prompts[i].posy + (j + 1) * 25, 255, 255, 255);
+            function displayNormalPrompts() {
+                for (var i = 0; i < normalPrompts.length; i++) {
+                    if (normalPrompts[i] != null) {
+                        roundedRect(normalPrompts[i].posx, normalPrompts[i].posy, normalPrompts[i].width, normalPrompts[i].height, 5, 0, 0, 0);
+                        roundedRect(normalPrompts[i].posx + 10, normalPrompts[i].posy + 10, 20, 14, 7, 255, 0, 0);
+                        drawText("X", normalPrompts[i].posx + 15, normalPrompts[i].posy + 10 + 11, 255, 255, 255);
+                        for (var j = 0; j < normalPrompts[i].elements.length; j++) {
+                            if (normalPrompts[i].elements[j].action == null) {
+                                roundedRect(normalPrompts[i].posx + 10, 5 + normalPrompts[i].posy + (j + 1) * 25, normalPrompts[i].width - 20, 20, 8, 50, 50, 50);
+                                drawText(normalPrompts[i].elements[j].text, normalPrompts[i].posx + 20, 20 + normalPrompts[i].posy + (j + 1) * 25, 255, 255, 255);
+                            } else if (normalPrompts[i].elements[j].action != null) {
+                                roundedRect(normalPrompts[i].posx + 10, 5 + normalPrompts[i].posy + (j + 1) * 25, normalPrompts[i].width - 20, 20, 8, 100, 100, 100);
+                                drawText(normalPrompts[i].elements[j].text, normalPrompts[i].posx + 20, 20 + normalPrompts[i].posy + (j + 1) * 25, 255, 255, 255);
                             }
                         }
                     }
@@ -595,28 +571,23 @@
             }
 
             function mouseClick() {
-                for (var i = 0; i < prompts.length; i++) {
-                    if (prompts[i] != null) {
-                        for (var j = 0; j < prompts[i].elements.length; j++) {
-                            if (pointerX > prompts[i].posx + 10 && pointerX < prompts[i].posx + prompts[i].width - 20) {
+                for (var i = 0; i < normalPrompts.length; i++) {
+                    if (normalPrompts[i] != null) {
+                        for (var j = 0; j < normalPrompts[i].elements.length; j++) {
+                            if (pointerX > normalPrompts[i].posx + 10 && pointerX < normalPrompts[i].posx + normalPrompts[i].width - 20) {
                                 // within element horizontally
-                                if (pointerY > 10 + prompts[i].posy + (j + 1) * 25 && pointerY < 30 + prompts[i].posy + (j + 1) * 25) {
+                                if (pointerY > 10 + normalPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + normalPrompts[i].posy + (j + 1) * 25) {
                                     // within element vertically
 
-                                    if (prompts[i].elements[j].action != null) {
+                                    if (normalPrompts[i].elements[j].action != null) {
                                         // button pressed
-                                        eval(`${prompts[i].elements[j].action}`);
+                                        eval(`${normalPrompts[i].elements[j].action}`);
                                     }
                                 }
                             }
                         }
-                        if (
-                            pointerX >= prompts[i].posx + 10 &&
-                            pointerX <= prompts[i].posx + 40 &&
-                            pointerY >= prompts[i].posy + 10 &&
-                            pointerY <= prompts[i].posy + 30
-                        ) {
-                            prompts[i] = null;
+                        if (pointerX >= normalPrompts[i].posx + 10 && pointerX <= normalPrompts[i].posx + 40 && pointerY >= normalPrompts[i].posy + 10 && pointerY <= normalPrompts[i].posy + 30) {
+                            normalPrompts[i] = null;
                             renderMap();
                         }
                     }
@@ -633,17 +604,17 @@
                             implements[vehicles[activeVehicle].attachedImplement].inventory.amount += amount;
 
                             farmMoney -= calculateGrainCost(amount);
-                            prompts[prompts.length] = new prompt(50, 225, 412, 60, [
+                            normalPrompts[normalPrompts.length] = new prompt(50, 225, 412, 60, [
                                 new element(`${amount} units of grain successfully bought, $${calculateGrainCost(amount)} spent`, null),
                             ]);
                         } else {
-                            prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
+                            normalPrompts[normalPrompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
                         }
                     } else {
-                        prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Planter Not Attached", null)]);
+                        normalPrompts[normalPrompts.length] = new prompt(50, 225, 412, 60, [new element("Planter Not Attached", null)]);
                     }
                 } else {
-                    prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("No Tool Attached", null)]);
+                    normalPrompts[normalPrompts.length] = new prompt(50, 225, 412, 60, [new element("No Tool Attached", null)]);
                 }
             }
 
@@ -758,11 +729,7 @@
                             for (var i = 0; i < implements.length; i++) {
                                 if (implements[i].toolType == vehicles[activeVehicle].name) {
                                     if (implements[i].posy == vehicles[activeVehicle].posy) {
-                                        if (
-                                            implements[i].rot == 90 &&
-                                            vehicles[activeVehicle].rotation == 90 &&
-                                            implements[i].posx - vehicles[activeVehicle].posx == -vehicles[activeVehicle].aoX
-                                        ) {
+                                        if (implements[i].rot == 90 && vehicles[activeVehicle].rotation == 90 && implements[i].posx - vehicles[activeVehicle].posx == -vehicles[activeVehicle].aoX) {
                                             vehicles[activeVehicle].implementAttached = true;
                                             vehicles[activeVehicle].attachedImplement = i;
                                         } else if (
@@ -774,11 +741,7 @@
                                             vehicles[activeVehicle].attachedImplement = i;
                                         }
                                     } else if (implements[i].posx == vehicles[activeVehicle].posx) {
-                                        if (
-                                            implements[i].rot == 0 &&
-                                            vehicles[activeVehicle].rotation == 0 &&
-                                            implements[i].posy - vehicles[activeVehicle].posy == vehicles[activeVehicle].aoY
-                                        ) {
+                                        if (implements[i].rot == 0 && vehicles[activeVehicle].rotation == 0 && implements[i].posy - vehicles[activeVehicle].posy == vehicles[activeVehicle].aoY) {
                                             vehicles[activeVehicle].implementAttached = true;
                                             vehicles[activeVehicle].attachedImplement = i;
                                         } else if (
@@ -790,18 +753,8 @@
                                             vehicles[activeVehicle].attachedImplement = i;
                                         }
                                     } else if (
-                                        distanceBetweenPoints(
-                                            implements[i].posx,
-                                            implements[i].posy,
-                                            vehicles[activeVehicle].posx,
-                                            vehicles[activeVehicle].posy
-                                        ) <= 1.5 ||
-                                        distanceBetweenPoints(
-                                            implements[i].posx,
-                                            implements[i].posy,
-                                            vehicles[activeVehicle].posx,
-                                            vehicles[activeVehicle].posy
-                                        ) <= -1.5
+                                        distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <= 1.5 ||
+                                        distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <= -1.5
                                     ) {
                                         vehicles[activeVehicle].implementAttached = true;
                                         vehicles[activeVehicle].attachedImplement = i;
@@ -864,7 +817,7 @@
                         }
                         break;
                     case "b":
-                        prompts[prompts.length] = new prompt(50, 50, 412, 160, [
+                        normalPrompts[normalPrompts.length] = new prompt(50, 50, 412, 160, [
                             new element("Buy Grain", null),
                             new element(`Buy 10 Units Of Grain For $${calculateGrainCost(10)}`, "buyGrain(10)"),
                             new element(`Buy 100 Units Of Grain For $${calculateGrainCost(100)}`, "buyGrain(100)"),
@@ -873,10 +826,10 @@
                         ]);
                         break;
                     case "n":
-                        prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
+                        normalPrompts[normalPrompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
                         for (var i = 0; i < purchaseableEquipment.length; i++) {
                             var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
-                            prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
+                            normalPrompts[normalPrompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
                         }
                         break;
                     case "p":
@@ -890,6 +843,7 @@
                             renderMode = "Normal";
                         } else {
                             renderMode = "Build";
+                            buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 50, [new element("1. Fence", null)]);
                         }
                         renderMap();
                         break;
@@ -916,7 +870,10 @@
                         }
                     }
                 } else {
-                    prompts[prompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
+                    normalPrompts[normalPrompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
+                }
+                if (vehicles[0] != null) {
+                    renderMode = "Normal";
                 }
             }
 
@@ -927,12 +884,7 @@
             function renderMap() {
                 for (var y = chunkY * canvasSize; y < (chunkY + 1) * canvasSize; y++) {
                     for (var x = chunkX * canvasSize; x < (chunkX + 1) * canvasSize; x++) {
-                        paintImage(
-                            tileImages[blocks[y][x].state],
-                            x * spriteSize - chunkX * spriteSize * canvasSize,
-                            y * spriteSize - chunkY * spriteSize * canvasSize,
-                            0
-                        );
+                        paintImage(tileImages[blocks[y][x].state], x * spriteSize - chunkX * spriteSize * canvasSize, y * spriteSize - chunkY * spriteSize * canvasSize, 0);
                     }
                 }
             }
@@ -941,12 +893,7 @@
                 for (var i = 0; i < implements.length; i++) {
                     for (var y = -2; y <= 2; y++) {
                         for (var x = -2; x <= 2; x++) {
-                            if (
-                                implements[i].posx + x >= 0 &&
-                                implements[i].posx + x <= mapSize &&
-                                implements[i].posy + y >= 0 &&
-                                implements[i].posy + y <= mapSize
-                            ) {
+                            if (implements[i].posx + x >= 0 && implements[i].posx + x <= mapSize && implements[i].posy + y >= 0 && implements[i].posy + y <= mapSize) {
                                 paintImage(
                                     tileImages[blocks[implements[i].posy + y][implements[i].posx + x].state],
                                     (implements[i].posx + x) * spriteSize - chunkX * spriteSize * canvasSize,
