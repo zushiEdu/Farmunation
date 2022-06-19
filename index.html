@@ -205,7 +205,7 @@
             const mapScale = 8;
 
             var tileImages = new Array();
-            var amountOfCrops = 8;
+            var amountOfCrops = 11;
             fillImageArray(tileImages, amountOfCrops);
 
             tileImages[0].src = `/${spriteSize}xSprites/Grass.png`;
@@ -216,6 +216,15 @@
             tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
             tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`;
             tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`;
+            tileImages[8].src = `/${spriteSize}xSprites/Fence-Horizontal.png`;
+            tileImages[9].src = `/${spriteSize}xSprites/Fence-Vertical.png`;
+            tileImages[10].src = `/${spriteSize}xSprites/Fence-Cross.png`;
+
+            var animalImages = new Array();
+            var amountOfAnimals = 1;
+            fillImageArray(animalImages, amountOfAnimals);
+
+            animalImages[0].src = `/${spriteSize}xSprites/Cow.png`;
 
             var machines = new Array();
             var amountOfMachines = 8;
@@ -254,7 +263,12 @@
             purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement", machines[5], "Tractor");
             purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7], "Tractor");
 
+            var renderMode = "Setup";
+
             function setup() {
+                if (vehicles[0] == null) {
+                    renderMode = "Setup";
+                }
                 // create basic map
                 prompts[prompts.length] = new prompt(50, 60, 412, 60, [new element("Please Buy A Vehicle To Get Started", null)]);
                 showControls();
@@ -276,13 +290,16 @@
             }
 
             function update() {
-                if (vehicles[0] == null) {
+                if (renderMode == "Setup") {
                     userInterface();
-                } else {
+                } else if (renderMode == "Normal") {
                     updateMap();
                     paintMachines();
                     userInterface();
                     applyImplements();
+                } else if (renderMode == "Build") {
+                    updateMap();
+                    paintMachines();
                 }
             }
 
@@ -653,211 +670,229 @@
             }
 
             function input(key) {
-                if (key == "x") {
-                    screenshot();
-                }
-                if (key == "w") {
-                    if (vehicles[activeVehicle].aoX == 0) {
-                        moveVehicle(true);
-                    }
-                    if (vehicles[activeVehicle].implementAttached) {
-                        moveImplement(true);
-                    }
+                switch (key) {
+                    case "x":
+                        screenshot();
+                        break;
+                    case "w":
+                        if (vehicles[activeVehicle].aoX == 0) {
+                            moveVehicle(true);
+                        }
+                        if (vehicles[activeVehicle].implementAttached) {
+                            moveImplement(true);
+                        }
 
-                    if (vehicles[activeVehicle].aoX != 0) {
-                        moveVehicle(true);
-                    }
-                    adjustChunk();
-                }
-                if (key == "s") {
-                    moveVehicle(false);
-                    if (vehicles[activeVehicle].implementAttached) {
-                        moveImplement(false);
-                    }
-                    adjustChunk();
-                }
-                if (key == "d") {
-                    if (vehicles[activeVehicle].aoX == 0) {
-                        if (vehicles[activeVehicle].rotation + 45 == 225) {
-                            vehicles[activeVehicle].rotation = -135;
-                        } else {
-                            vehicles[activeVehicle].rotation += 45;
+                        if (vehicles[activeVehicle].aoX != 0) {
+                            moveVehicle(true);
                         }
-                    }
-                    if (vehicles[activeVehicle].implementAttached) {
-                        implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
-                    }
-                    if (vehicles[activeVehicle].aoX != 0) {
-                        if (vehicles[activeVehicle].rotation + 45 == 225) {
-                            vehicles[activeVehicle].rotation = -135;
-                        } else {
-                            vehicles[activeVehicle].rotation += 45;
+                        adjustChunk();
+                        break;
+                    case "s":
+                        moveVehicle(false);
+                        if (vehicles[activeVehicle].implementAttached) {
+                            moveImplement(false);
                         }
-                    }
-                    adjustChunk();
-                }
-                if (key == "a") {
-                    if (vehicles[activeVehicle].aoX == 0) {
-                        if (vehicles[activeVehicle].rotation - 45 == -225) {
-                            vehicles[activeVehicle].rotation = 135;
-                        } else {
-                            if (vehicles[activeVehicle].rotation - 45 == -180) {
-                                vehicles[activeVehicle].rotation = 180;
+                        adjustChunk();
+                        break;
+                    case "d":
+                        if (vehicles[activeVehicle].aoX == 0) {
+                            if (vehicles[activeVehicle].rotation + 45 == 225) {
+                                vehicles[activeVehicle].rotation = -135;
                             } else {
-                                vehicles[activeVehicle].rotation -= 45;
+                                vehicles[activeVehicle].rotation += 45;
                             }
                         }
-                    }
-                    if (vehicles[activeVehicle].implementAttached) {
-                        implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
-                    }
-                    if (vehicles[activeVehicle].aoX != 0) {
-                        if (vehicles[activeVehicle].rotation - 45 == -225) {
-                            vehicles[activeVehicle].rotation = 135;
-                        } else {
-                            if (vehicles[activeVehicle].rotation - 45 == -180) {
-                                vehicles[activeVehicle].rotation = 180;
+                        if (vehicles[activeVehicle].implementAttached) {
+                            implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                        }
+                        if (vehicles[activeVehicle].aoX != 0) {
+                            if (vehicles[activeVehicle].rotation + 45 == 225) {
+                                vehicles[activeVehicle].rotation = -135;
                             } else {
-                                vehicles[activeVehicle].rotation -= 45;
+                                vehicles[activeVehicle].rotation += 45;
                             }
                         }
-                    }
-                    adjustChunk();
-                }
-                if (key == "v") {
-                    if (vehicles[activeVehicle].implementAttached) {
-                        if (implements[vehicles[activeVehicle].attachedImplement].active) {
-                            implements[vehicles[activeVehicle].attachedImplement].active = false;
-                        } else {
-                            implements[vehicles[activeVehicle].attachedImplement].active = true;
+                        adjustChunk();
+                        break;
+                    case "a":
+                        if (vehicles[activeVehicle].aoX == 0) {
+                            if (vehicles[activeVehicle].rotation - 45 == -225) {
+                                vehicles[activeVehicle].rotation = 135;
+                            } else {
+                                if (vehicles[activeVehicle].rotation - 45 == -180) {
+                                    vehicles[activeVehicle].rotation = 180;
+                                } else {
+                                    vehicles[activeVehicle].rotation -= 45;
+                                }
+                            }
                         }
-                    }
-                }
-                if (key == "q") {
-                    if (vehicles[activeVehicle].implementAttached) {
-                        vehicles[activeVehicle].implementAttached = false;
-                    } else {
-                        for (var i = 0; i < implements.length; i++) {
-                            if (implements[i].toolType == vehicles[activeVehicle].name) {
-                                if (implements[i].posy == vehicles[activeVehicle].posy) {
-                                    if (
-                                        implements[i].rot == 90 &&
-                                        vehicles[activeVehicle].rotation == 90 &&
-                                        implements[i].posx - vehicles[activeVehicle].posx == -vehicles[activeVehicle].aoX
-                                    ) {
-                                        vehicles[activeVehicle].implementAttached = true;
-                                        vehicles[activeVehicle].attachedImplement = i;
+                        if (vehicles[activeVehicle].implementAttached) {
+                            implements[vehicles[activeVehicle].attachedImplement].rot = vehicles[activeVehicle].rotation;
+                        }
+                        if (vehicles[activeVehicle].aoX != 0) {
+                            if (vehicles[activeVehicle].rotation - 45 == -225) {
+                                vehicles[activeVehicle].rotation = 135;
+                            } else {
+                                if (vehicles[activeVehicle].rotation - 45 == -180) {
+                                    vehicles[activeVehicle].rotation = 180;
+                                } else {
+                                    vehicles[activeVehicle].rotation -= 45;
+                                }
+                            }
+                        }
+                        adjustChunk();
+                        break;
+                    case "v":
+                        if (vehicles[activeVehicle].implementAttached) {
+                            if (implements[vehicles[activeVehicle].attachedImplement].active) {
+                                implements[vehicles[activeVehicle].attachedImplement].active = false;
+                            } else {
+                                implements[vehicles[activeVehicle].attachedImplement].active = true;
+                            }
+                        }
+                        break;
+                    case "q":
+                        if (vehicles[activeVehicle].implementAttached) {
+                            vehicles[activeVehicle].implementAttached = false;
+                        } else {
+                            for (var i = 0; i < implements.length; i++) {
+                                if (implements[i].toolType == vehicles[activeVehicle].name) {
+                                    if (implements[i].posy == vehicles[activeVehicle].posy) {
+                                        if (
+                                            implements[i].rot == 90 &&
+                                            vehicles[activeVehicle].rotation == 90 &&
+                                            implements[i].posx - vehicles[activeVehicle].posx == -vehicles[activeVehicle].aoX
+                                        ) {
+                                            vehicles[activeVehicle].implementAttached = true;
+                                            vehicles[activeVehicle].attachedImplement = i;
+                                        } else if (
+                                            implements[i].rot == -90 &&
+                                            vehicles[activeVehicle].rotation == -90 &&
+                                            implements[i].posx - vehicles[activeVehicle].posx == vehicles[activeVehicle].aoX
+                                        ) {
+                                            vehicles[activeVehicle].implementAttached = true;
+                                            vehicles[activeVehicle].attachedImplement = i;
+                                        }
+                                    } else if (implements[i].posx == vehicles[activeVehicle].posx) {
+                                        if (
+                                            implements[i].rot == 0 &&
+                                            vehicles[activeVehicle].rotation == 0 &&
+                                            implements[i].posy - vehicles[activeVehicle].posy == vehicles[activeVehicle].aoY
+                                        ) {
+                                            vehicles[activeVehicle].implementAttached = true;
+                                            vehicles[activeVehicle].attachedImplement = i;
+                                        } else if (
+                                            implements[i].rot == 180 &&
+                                            vehicles[activeVehicle].rotation == 180 &&
+                                            implements[i].posy - vehicles[activeVehicle].posy == -vehicles[activeVehicle].aoY
+                                        ) {
+                                            vehicles[activeVehicle].implementAttached = true;
+                                            vehicles[activeVehicle].attachedImplement = i;
+                                        }
                                     } else if (
-                                        implements[i].rot == -90 &&
-                                        vehicles[activeVehicle].rotation == -90 &&
-                                        implements[i].posx - vehicles[activeVehicle].posx == vehicles[activeVehicle].aoX
+                                        distanceBetweenPoints(
+                                            implements[i].posx,
+                                            implements[i].posy,
+                                            vehicles[activeVehicle].posx,
+                                            vehicles[activeVehicle].posy
+                                        ) <= 1.5 ||
+                                        distanceBetweenPoints(
+                                            implements[i].posx,
+                                            implements[i].posy,
+                                            vehicles[activeVehicle].posx,
+                                            vehicles[activeVehicle].posy
+                                        ) <= -1.5
                                     ) {
                                         vehicles[activeVehicle].implementAttached = true;
                                         vehicles[activeVehicle].attachedImplement = i;
                                     }
-                                } else if (implements[i].posx == vehicles[activeVehicle].posx) {
-                                    if (
-                                        implements[i].rot == 0 &&
-                                        vehicles[activeVehicle].rotation == 0 &&
-                                        implements[i].posy - vehicles[activeVehicle].posy == vehicles[activeVehicle].aoY
-                                    ) {
-                                        vehicles[activeVehicle].implementAttached = true;
-                                        vehicles[activeVehicle].attachedImplement = i;
-                                    } else if (
-                                        implements[i].rot == 180 &&
-                                        vehicles[activeVehicle].rotation == 180 &&
-                                        implements[i].posy - vehicles[activeVehicle].posy == -vehicles[activeVehicle].aoY
-                                    ) {
-                                        vehicles[activeVehicle].implementAttached = true;
-                                        vehicles[activeVehicle].attachedImplement = i;
+                                }
+                            }
+                        }
+                        break;
+                    case "e":
+                        if (activeVehicle < vehicles.length - 1) {
+                            activeVehicle++;
+                        } else {
+                            activeVehicle = 0;
+                        }
+                        break;
+                    case "l":
+                        for (var y = 0; y < blocks.length; y++) {
+                            for (var x = 0; x < blocks[y].length; x++) {
+                                if (blocks[y][x].willGrow) {
+                                    if (blocks[y][x].state + 1 < 6) {
+                                        blocks[y][x].tillGrown -= 1;
+                                        blocks[y][x].state += 1;
                                     }
-                                } else if (
-                                    distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <=
-                                        1.5 ||
-                                    distanceBetweenPoints(implements[i].posx, implements[i].posy, vehicles[activeVehicle].posx, vehicles[activeVehicle].posy) <=
-                                        -1.5
+                                }
+                            }
+                        }
+                        renderMap();
+                        break;
+                    case "r":
+                        if (vehicles[activeVehicle].name == "Harvester") {
+                            if (implements[4].rot == vehicles[activeVehicle].rotation) {
+                                // same rotation
+                                if (implements[4].posy - vehicles[activeVehicle].posy == 1 || implements[4].posy - vehicles[activeVehicle].posy == -1) {
+                                    if (implements[4].posx - vehicles[activeVehicle].posx == 0) {
+                                        if (vehicles[activeVehicle].rotation == 90 || vehicles[activeVehicle].rotation == -90) {
+                                            implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
+                                            vehicles[activeVehicle].inventory.amount = 0;
+                                        }
+                                    }
+                                } else if (implements[4].posx - vehicles[activeVehicle].posx == 1 || implements[4].posx - vehicles[activeVehicle].posx == -1) {
+                                    if (implements[4].posy - vehicles[activeVehicle].posy == 0) {
+                                        if (vehicles[activeVehicle].rotation == 0 || vehicles[activeVehicle].rotation == 180) {
+                                            implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
+                                            vehicles[activeVehicle].inventory.amount = 0;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Trailer") {
+                            for (var i = 0; i < specialLocations.length; i++) {
+                                if (
+                                    implements[vehicles[activeVehicle].attachedImplement].posx == specialLocations[i].posx &&
+                                    implements[vehicles[activeVehicle].attachedImplement].posy == specialLocations[i].posy
                                 ) {
-                                    vehicles[activeVehicle].implementAttached = true;
-                                    vehicles[activeVehicle].attachedImplement = i;
+                                    farmMoney += 3 * calculateGrainCost(implements[vehicles[activeVehicle].attachedImplement].inventory.amount);
+                                    implements[vehicles[activeVehicle].attachedImplement].inventory.amount = 0;
                                 }
                             }
                         }
-                    }
-                }
-                if (key == "e") {
-                    if (activeVehicle < vehicles.length - 1) {
-                        activeVehicle++;
-                    } else {
-                        activeVehicle = 0;
-                    }
-                }
-                if (key == "c") {
-                    for (var y = 0; y < blocks.length; y++) {
-                        for (var x = 0; x < blocks[y].length; x++) {
-                            if (blocks[y][x].willGrow) {
-                                if (blocks[y][x].state + 1 < 6) {
-                                    blocks[y][x].tillGrown -= 1;
-                                    blocks[y][x].state += 1;
-                                }
-                            }
+                        break;
+                    case "b":
+                        prompts[prompts.length] = new prompt(50, 50, 412, 160, [
+                            new element("Buy Grain", null),
+                            new element(`Buy 10 Units Of Grain For $${calculateGrainCost(10)}`, "buyGrain(10)"),
+                            new element(`Buy 100 Units Of Grain For $${calculateGrainCost(100)}`, "buyGrain(100)"),
+                            new element(`Buy 500 Units Of Grain For $${calculateGrainCost(500)}`, "buyGrain(500)"),
+                            new element(`Buy 1000 Units Of Grain For $${calculateGrainCost(1000)}`, "buyGrain(1000)"),
+                        ]);
+                        break;
+                    case "n":
+                        prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
+                        for (var i = 0; i < purchaseableEquipment.length; i++) {
+                            var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
+                            prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
                         }
-                    }
-                    renderMap();
-                }
-                if (key == "r") {
-                    if (vehicles[activeVehicle].name == "Harvester") {
-                        if (implements[4].rot == vehicles[activeVehicle].rotation) {
-                            // same rotation
-                            if (implements[4].posy - vehicles[activeVehicle].posy == 1 || implements[4].posy - vehicles[activeVehicle].posy == -1) {
-                                if (implements[4].posx - vehicles[activeVehicle].posx == 0) {
-                                    if (vehicles[activeVehicle].rotation == 90 || vehicles[activeVehicle].rotation == -90) {
-                                        implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
-                                        vehicles[activeVehicle].inventory.amount = 0;
-                                    }
-                                }
-                            } else if (implements[4].posx - vehicles[activeVehicle].posx == 1 || implements[4].posx - vehicles[activeVehicle].posx == -1) {
-                                if (implements[4].posy - vehicles[activeVehicle].posy == 0) {
-                                    if (vehicles[activeVehicle].rotation == 0 || vehicles[activeVehicle].rotation == 180) {
-                                        implements[4].inventory.amount += vehicles[activeVehicle].inventory.amount;
-                                        vehicles[activeVehicle].inventory.amount = 0;
-                                    }
-                                }
-                            }
+                        break;
+                    case "p":
+                        renderMap();
+                        break;
+                    case "c":
+                        showControls();
+                        break;
+                    case "m":
+                        if (renderMode == "Build") {
+                            renderMode = "Normal";
+                        } else {
+                            renderMode = "Build";
                         }
-                    }
-                    if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Trailer") {
-                        for (var i = 0; i < specialLocations.length; i++) {
-                            if (
-                                implements[vehicles[activeVehicle].attachedImplement].posx == specialLocations[i].posx &&
-                                implements[vehicles[activeVehicle].attachedImplement].posy == specialLocations[i].posy
-                            ) {
-                                farmMoney += 3 * calculateGrainCost(implements[vehicles[activeVehicle].attachedImplement].inventory.amount);
-                                implements[vehicles[activeVehicle].attachedImplement].inventory.amount = 0;
-                            }
-                        }
-                    }
-                }
-                if (key == "b") {
-                    prompts[prompts.length] = new prompt(50, 50, 412, 160, [
-                        new element("Buy Grain", null),
-                        new element(`Buy 10 Units Of Grain For $${calculateGrainCost(10)}`, "buyGrain(10)"),
-                        new element(`Buy 100 Units Of Grain For $${calculateGrainCost(100)}`, "buyGrain(100)"),
-                        new element(`Buy 500 Units Of Grain For $${calculateGrainCost(500)}`, "buyGrain(500)"),
-                        new element(`Buy 1000 Units Of Grain For $${calculateGrainCost(1000)}`, "buyGrain(1000)"),
-                    ]);
-                }
-                if (key == "n") {
-                    prompts[prompts.length] = new prompt(50, 50, 412, 260, [new element("Huber Ag Ltd.", null)]);
-                    for (var i = 0; i < purchaseableEquipment.length; i++) {
-                        var text = `Buy ${purchaseableEquipment[i].size} ${purchaseableEquipment[i].name} for $${purchaseableEquipment[i].price}`;
-                        prompts[prompts.length - 1].elements[i + 1] = new element(text, `buyEquipment(purchaseableEquipment[${i}])`);
-                    }
-                }
-                if (key == "p") {
-                    renderMap();
-                }
-                if (key == "c") {
-                    showControls();
+                        renderMap();
+                        break;
                 }
             }
 
