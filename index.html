@@ -251,6 +251,8 @@
             var activeVehicle = 0;
             var vehicles = new Array();
 
+            var buildType = 8;
+
             var purchaseableEquipment = new Array();
             // list of all the machines within the game
             // to add more machines add the sprite to the machines list above and add a purchaseable equipment item to the list below
@@ -331,6 +333,10 @@
                     chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
                     chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
                 }
+            }
+
+            function screenToWorld(pos) {
+                return Math.floor(pos / spriteSize);
             }
 
             function calculateGrainCost(amount) {
@@ -484,7 +490,6 @@
                                 if (vehicles[activeVehicle].inventory == null) {
                                     vehicles[activeVehicle].inventory = new item("Grain", 0);
                                 }
-                                console.log(vehicles[activeVehicle].inventory);
                                 if (vehicles[activeVehicle].inventory.name == "Grain") {
                                     vehicles[activeVehicle].inventory.amount +=
                                         1 * blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield;
@@ -590,47 +595,53 @@
                     }
                 }
             }
-
             function mouseClick() {
-                for (var i = 0; i < normalPrompts.length; i++) {
-                    if (normalPrompts[i] != null) {
-                        for (var j = 0; j < normalPrompts[i].elements.length; j++) {
-                            if (pointerX > normalPrompts[i].posx + 10 && pointerX < normalPrompts[i].posx + normalPrompts[i].width - 20) {
-                                // within element horizontally
-                                if (pointerY > 10 + normalPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + normalPrompts[i].posy + (j + 1) * 25) {
-                                    // within element vertically
+                if (renderMode == "Build") {
+                    blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(buildType, false, null, null, null);
+                    specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
 
-                                    if (normalPrompts[i].elements[j].action != null) {
-                                        // button pressed
-                                        eval(`${normalPrompts[i].elements[j].action}`);
+                    for (var i = 0; i < buildPrompts.length; i++) {
+                        if (buildPrompts[i] != null) {
+                            for (var j = 0; j < buildPrompts[i].elements.length; j++) {
+                                if (pointerX > buildPrompts[i].posx + 10 && pointerX < buildPrompts[i].posx + buildPrompts[i].width - 20) {
+                                    // within element horizontally
+                                    if (pointerY > 10 + buildPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + buildPrompts[i].posy + (j + 1) * 25) {
+                                        // within element vertically
+
+                                        if (buildPrompts[i].elements[j].action != null) {
+                                            // button pressed
+                                            eval(`${buildPrompts[i].elements[j].action}`);
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (pointerX >= normalPrompts[i].posx + 10 && pointerX <= normalPrompts[i].posx + 40 && pointerY >= normalPrompts[i].posy + 10 && pointerY <= normalPrompts[i].posy + 30) {
-                            normalPrompts[i] = null;
-                            renderMap();
+                            if (pointerX >= buildPrompts[i].posx + 10 && pointerX <= buildPrompts[i].posx + 40 && pointerY >= buildPrompts[i].posy + 10 && pointerY <= buildPrompts[i].posy + 30) {
+                                buildPrompts[i] = null;
+                            }
                         }
                     }
+                    renderMap();
                 }
-                for (var i = 0; i < buildPrompts.length; i++) {
-                    if (buildPrompts[i] != null) {
-                        for (var j = 0; j < buildPrompts[i].elements.length; j++) {
-                            if (pointerX > buildPrompts[i].posx + 10 && pointerX < buildPrompts[i].posx + buildPrompts[i].width - 20) {
-                                // within element horizontally
-                                if (pointerY > 10 + buildPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + buildPrompts[i].posy + (j + 1) * 25) {
-                                    // within element vertically
+                if (renderMode != "Build") {
+                    for (var i = 0; i < normalPrompts.length; i++) {
+                        if (normalPrompts[i] != null) {
+                            for (var j = 0; j < normalPrompts[i].elements.length; j++) {
+                                if (pointerX > normalPrompts[i].posx + 10 && pointerX < normalPrompts[i].posx + normalPrompts[i].width - 20) {
+                                    // within element horizontally
+                                    if (pointerY > 10 + normalPrompts[i].posy + (j + 1) * 25 && pointerY < 30 + normalPrompts[i].posy + (j + 1) * 25) {
+                                        // within element vertically
 
-                                    if (buildPrompts[i].elements[j].action != null) {
-                                        // button pressed
-                                        eval(`${buildPrompts[i].elements[j].action}`);
+                                        if (normalPrompts[i].elements[j].action != null) {
+                                            // button pressed
+                                            eval(`${normalPrompts[i].elements[j].action}`);
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (pointerX >= buildPrompts[i].posx + 10 && pointerX <= buildPrompts[i].posx + 40 && pointerY >= buildPrompts[i].posy + 10 && pointerY <= buildPrompts[i].posy + 30) {
-                            buildPrompts[i] = null;
-                            renderMap();
+                            if (pointerX >= normalPrompts[i].posx + 10 && pointerX <= normalPrompts[i].posx + 40 && pointerY >= normalPrompts[i].posy + 10 && pointerY <= normalPrompts[i].posy + 30) {
+                                normalPrompts[i] = null;
+                                renderMap();
+                            }
                         }
                     }
                 }
@@ -850,7 +861,8 @@
                             for (var i = 0; i < specialLocations.length; i++) {
                                 if (
                                     implements[vehicles[activeVehicle].attachedImplement].posx == specialLocations[i].posx &&
-                                    implements[vehicles[activeVehicle].attachedImplement].posy == specialLocations[i].posy
+                                    implements[vehicles[activeVehicle].attachedImplement].posy == specialLocations[i].posy &&
+                                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 7
                                 ) {
                                     farmMoney += 3 * calculateGrainCost(implements[vehicles[activeVehicle].attachedImplement].inventory.amount);
                                     implements[vehicles[activeVehicle].attachedImplement].inventory.amount = 0;
@@ -885,10 +897,18 @@
                             renderMode = "Normal";
                         } else {
                             renderMode = "Build";
-                            buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 60, [new element("1. Fence", null)]);
+                            buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 60, [new element("1. SellPoint | 2. Fence 1 | 3. Fence 2 | 4. Fence 3", null)]);
                         }
                         renderMap();
                         break;
+                }
+
+                if (key % 1 == 0) {
+                    if (parseInt(key) + 6 < tileImages.length) {
+                        buildType = parseInt(key) + 6;
+                        renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
+                        paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                    }
                 }
             }
 
@@ -927,6 +947,14 @@
                 for (var y = chunkY * canvasSize; y < (chunkY + 1) * canvasSize; y++) {
                     for (var x = chunkX * canvasSize; x < (chunkX + 1) * canvasSize; x++) {
                         paintImage(tileImages[blocks[y][x].state], x * spriteSize - chunkX * spriteSize * canvasSize, y * spriteSize - chunkY * spriteSize * canvasSize, 0);
+                    }
+                }
+            }
+
+            function renderPortionOfMap(aX, aY, bX, bY) {
+                for (var y = aY; y < bY; y++) {
+                    for (var x = aX; x < bX; x++) {
+                        paintImage(tileImages[blocks[y][x].state], x * spriteSize, y * spriteSize, 0);
                     }
                 }
             }
@@ -1045,6 +1073,11 @@
                 var hRatio = (rect.bottom - rect.top) / height;
                 pointerX = (event.pageX - window.scrollX - rect.left) / wRatio;
                 pointerY = (event.pageY - window.scrollY - rect.top) / hRatio;
+
+                if (renderMode == "Build") {
+                    renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
+                    paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                }
             };
 
             setup();
