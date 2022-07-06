@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Farmunation</title>
-        <link rel="icon" type="image/x-icon" href="/Icon.png" />
+        <link rel="icon" type="image/x-icon" href="/Icons/Icon.png" />
         <style>
             @import url("https://fonts.googleapis.com/css2?family=Barlow&family=IBM+Plex+Mono&display=swap");
 
@@ -179,6 +179,10 @@
                 this.image = image;
                 this.attachableTo = attachableTo;
             }
+            function prop(price, name) {
+                this.price = price;
+                this.name = name;
+            }
 
             const spriteSize = 16;
             const c = document.getElementById("main");
@@ -238,6 +242,20 @@
             machines[5].src = `/${spriteSize}xSprites/LargeCultivator.png`;
             machines[6].src = `/${spriteSize}xSprites/GrainTrailer.png`;
             machines[7].src = `/${spriteSize}xSprites/LargePlanter.png`;
+
+            var props = new Array();
+            var amountOfProps = 4;
+
+            props[0] = new prop(15000, "Sell Point");
+            props[1] = new prop(150, "Fence Horizontal");
+            props[2] = new prop(150, "Fence Vertical");
+            props[3] = new prop(200, "Fence Cross");
+
+            var icons = new Array();
+            var amountOfIcons = 1;
+            fillImageArray(icons, amountOfIcons);
+
+            icons[0].src = `/Icons/bulldozer.png`;
 
             var blocks = [[new tile()]];
 
@@ -300,6 +318,7 @@
             }
 
             function buildUserInterface() {
+                displayFarmMoney();
                 displayBuildPrompts();
             }
 
@@ -385,9 +404,10 @@
 
             function normalUserInterface() {
                 // ui
+                // tool display box
                 roundedRect(0, 0, 512 - 16 - 100, 20, 5, 0, 0, 0);
+                // position display box
                 roundedRect(512 - 16 - 100 + 10, 0, 90, 20, 5, 0, 0, 0);
-                roundedRect(512 - 16 - 100 + 10, 25, 90, 20, 5, 0, 0, 0);
 
                 // tool display computing
                 var at;
@@ -426,8 +446,16 @@
                     drawText(vehicles[activeVehicle].name + bt + at, 5, 15, 255, 255, 255);
                     drawText(vehicles[activeVehicle].posx + ", " + vehicles[activeVehicle].posy, 512 - 16 - 80, 15, 255, 255, 255);
                 }
-                drawText("$" + farmMoney, 512 - 16 - 80, 40, 255, 255, 255);
+
+                // show prompts
+                displayFarmMoney();
                 displayNormalPrompts();
+            }
+
+            function displayFarmMoney() {
+                // money display box
+                roundedRect(512 - 16 - 100 + 10, 25, 90, 20, 5, 0, 0, 0);
+                drawText("$" + farmMoney, 512 - 16 - 80, 40, 255, 255, 255);
             }
 
             function applyImplements() {
@@ -591,8 +619,23 @@
 
             function mouseClick() {
                 if (renderMode == "Build") {
-                    blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(buildType, false, null, null, null);
-                    specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
+                    if (buildType == "bulldoze") {
+                        if (blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state >= 6) {
+                            farmMoney += props[blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state - 6].price * 0.5;
+                            blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(0, false, null, null, null);
+                            for (var i = 0; i < specialLocations.length; i++) {
+                                if (specialLocations[i] != null) {
+                                    if (specialLocations[i].posx == screenToWorld(pointerX) && specialLocations[i].posy == screenToWorld(pointerY)) {
+                                        specialLocations[i] = null;
+                                    }
+                                }
+                            }
+                        }
+                    } else if (farmMoney >= props[buildType - 6].price) {
+                        blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(buildType, false, null, null, null);
+                        specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
+                        farmMoney -= props[buildType - 6].price;
+                    }
 
                     for (var i = 0; i < buildPrompts.length; i++) {
                         if (buildPrompts[i] != null) {
@@ -897,11 +940,16 @@
                         break;
                 }
 
-                if (key % 1 == 0) {
-                    if (parseInt(key) + 6 < tileImages.length) {
-                        buildType = parseInt(key) + 6;
-                        renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
-                        paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                if (renderMode == "Build") {
+                    if (key % 1 == 0) {
+                        if (parseInt(key) + 6 < tileImages.length) {
+                            buildType = parseInt(key) + 6;
+                            renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
+                            paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                        }
+                    }
+                    if (key == "b") {
+                        buildType = "bulldoze";
                     }
                 }
             }
@@ -948,7 +996,9 @@
             function renderPortionOfMap(aX, aY, bX, bY) {
                 for (var y = aY; y < bY; y++) {
                     for (var x = aX; x < bX; x++) {
-                        paintImage(tileImages[blocks[y][x].state], x * spriteSize, y * spriteSize, 0);
+                        if (blocks[y][x] != null && y >= 0 && x >= 0) {
+                            paintImage(tileImages[blocks[y][x].state], x * spriteSize, y * spriteSize, 0);
+                        }
                     }
                 }
             }
@@ -1069,13 +1119,18 @@
                 pointerY = (event.pageY - window.scrollY - rect.top) / hRatio;
 
                 if (renderMode == "Build") {
-                    renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
-                    paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                    if (buildType >= 6) {
+                        renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
+                        paintImage(tileImages[buildType], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                    } else if (buildType == "bulldoze") {
+                        renderPortionOfMap(screenToWorld(pointerX) - 3, screenToWorld(pointerY) - 3, screenToWorld(pointerX) + 3, screenToWorld(pointerY) + 3);
+                        paintImage(icons[0], screenToWorld(pointerX) * spriteSize, screenToWorld(pointerY) * spriteSize, 0);
+                    }
                 }
             };
 
             setup();
-            setInterval(update, 1 / 30);
+            setInterval(update, 1 / 24);
         </script>
     </body>
 </html>
