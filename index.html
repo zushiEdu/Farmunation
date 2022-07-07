@@ -269,7 +269,9 @@
             var activeVehicle = 0;
             var vehicles = new Array();
 
-            var buildType = 8;
+            var buildType = 7;
+
+            var fps = 30;
 
             var purchaseableEquipment = new Array();
             // list of all the machines within the game
@@ -335,14 +337,10 @@
             function adjustChunk() {
                 if (chunkX != Math.floor(vehicles[activeVehicle].posx / canvasSize)) {
                     renderMap();
-                } else {
                     chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
-                    chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
                 }
                 if (chunkY != Math.floor(vehicles[activeVehicle].posy / canvasSize)) {
                     renderMap();
-                } else {
-                    chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
                     chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
                 }
             }
@@ -362,14 +360,17 @@
             }
 
             function showControls() {
-                normalPrompts[normalPrompts.length] = new prompt(50, 130, 412, 210, [
-                    new element("N Shows Vehicle Buy Menu"),
-                    new element("B Shows Seed Buy Menu"),
-                    new element("P Re-Renders The Screen"),
+                normalPrompts[normalPrompts.length] = new prompt(50, 130, 412, 285, [
+                    new element("N Opens Vehicle Buy Menu"),
+                    new element("B Opens Seed Buy Menu"),
+                    new element("P Fixes Stuck Tools and Render Glitches"),
                     new element("E Switches Vehicles"),
                     new element("Q Attaches Implements"),
                     new element("V Activates Implements"),
                     new element("C Shows Controls"),
+                    new element("M Turns On Build Mode"),
+                    new element("     ↳ While In Build Mode Use B To Bulldoze Props"),
+                    new element("X Takes A Screenshot"),
                 ]);
             }
 
@@ -631,10 +632,12 @@
                                 }
                             }
                         }
-                    } else if (farmMoney >= props[buildType - 6].price) {
-                        blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(buildType, false, null, null, null);
-                        specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
-                        farmMoney -= props[buildType - 6].price;
+                    } else if (farmMoney >= props[buildType - 7].price) {
+                        if (blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state <= 6) {
+                            blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(buildType, false, null, null, null);
+                            specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
+                            farmMoney -= props[buildType - 7].price;
+                        }
                     }
 
                     for (var i = 0; i < buildPrompts.length; i++) {
@@ -710,8 +713,15 @@
 
             function moveVehicle(f) {
                 if (f) {
-                    vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
-                    vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                    if (
+                        vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation))) >= 0 &&
+                        vehicles[activeVehicle].posx - Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation))) < mapSize &&
+                        vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation))) >= 0 &&
+                        vehicles[activeVehicle].posy + Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation))) < mapSize
+                    ) {
+                        vehicles[activeVehicle].posy += Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
+                        vehicles[activeVehicle].posx -= Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
+                    }
                 } else {
                     vehicles[activeVehicle].posy -= Math.round(Math.cos(toRadian(vehicles[activeVehicle].rotation)));
                     vehicles[activeVehicle].posx += Math.round(Math.sin(toRadian(vehicles[activeVehicle].rotation)));
@@ -925,6 +935,20 @@
                         break;
                     case "p":
                         renderMap();
+                        if (renderMode == "Normal") {
+                            for (var i = 0; i < vehicles.length; i++) {
+                                if (vehicles[i].posx < 0 || vehicles[i].posx > mapSize || vehicles[i].posy < 0 || vehicles[i].posx > mapSize) {
+                                    vehicles[i].posx = mapSize / 2;
+                                    vehicles[i].posy = mapSize / 2;
+                                }
+                            }
+                            for (var i = 0; i < implements.length; i++) {
+                                if (implements[i].posx < 0 || implements[i].posx > mapSize || implements[i].posy < 0 || implements[i].posx > mapSize) {
+                                    implements[i].posx = canvasSize / 2;
+                                    implements[i].posy = canvasSize / 2;
+                                }
+                            }
+                        }
                         break;
                     case "c":
                         showControls();
@@ -1130,7 +1154,7 @@
             };
 
             setup();
-            setInterval(update, 1 / 24);
+            setInterval(update, 1 / fps);
         </script>
     </body>
 </html>
