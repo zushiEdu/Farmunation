@@ -166,10 +166,10 @@
                 this.text = text;
                 this.action = action;
             }
-            function specialLocation(posx, posy, action) {
+            function specialLocation(posx, posy, property) {
                 this.posx = posx;
                 this.posy = posy;
-                this.action = action;
+                this.property = property;
             }
             function machine(name, price, size, type, image, attachableTo) {
                 this.name = name;
@@ -622,7 +622,7 @@
                 if (renderMode == "Build") {
                     if (buildType == "bulldoze") {
                         if (blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state >= 6) {
-                            farmMoney += props[blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state - 6].price * 0.5;
+                            farmMoney += props[blocks[screenToWorld(pointerY)][screenToWorld(pointerX)].state - 7].price * 0.5;
                             blocks[screenToWorld(pointerY)][screenToWorld(pointerX)] = new tile(0, false, null, null, null);
                             for (var i = 0; i < specialLocations.length; i++) {
                                 if (specialLocations[i] != null) {
@@ -949,6 +949,8 @@
                                 }
                             }
                         }
+                        saveVariableToFile(implements, "implements");
+                        saveVariableToFile(vehicles, "vehicles");
                         break;
                     case "c":
                         showControls();
@@ -976,6 +978,15 @@
                         buildType = "bulldoze";
                     }
                 }
+            }
+
+            function saveVariableToFile(variable, saveName) {
+                var thingToSave = JSON.stringify(variable);
+                var hiddenElement = document.createElement("a");
+                hiddenElement.href = "data:attachment/text," + encodeURI(thingToSave);
+                hiddenElement.target = "_blank";
+                hiddenElement.download = `${saveName}.json`;
+                hiddenElement.click();
             }
 
             function buyEquipment(machine) {
@@ -1020,8 +1031,10 @@
             function renderPortionOfMap(aX, aY, bX, bY) {
                 for (var y = aY; y < bY; y++) {
                     for (var x = aX; x < bX; x++) {
-                        if (blocks[y][x] != null && y >= 0 && x >= 0) {
-                            paintImage(tileImages[blocks[y][x].state], x * spriteSize, y * spriteSize, 0);
+                        if (y >= 0 && x >= 0) {
+                            if (blocks[y][x] != null) {
+                                paintImage(tileImages[blocks[y][x].state], x * spriteSize, y * spriteSize, 0);
+                            }
                         }
                     }
                 }
