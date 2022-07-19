@@ -638,6 +638,8 @@
                             specialLocations[specialLocations.length] = new specialLocation(screenToWorld(pointerX), screenToWorld(pointerY), null);
                             farmMoney -= props[buildType - 7].price;
                         }
+                    } else {
+                        buildPrompts[buildPrompts.length] = new prompt(50, 225, 412, 60, [new element("Not Enough Money", null)]);
                     }
 
                     for (var i = 0; i < buildPrompts.length; i++) {
