@@ -75,9 +75,11 @@ ul {
     position: absolute;
     bottom: 0;
 }
+
 #bottom-bun {
     margin-top: auto;
 }
+
 canvas {
     background-color: whitesmoke;
     image-rendering: pixelated;
