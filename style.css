@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow&family=IBM+Plex+Mono&display=swap");
+
+html {
+    font-family: "Barlow", sans-serif;
+}
+
+.body {
+    --bg: #f2f2f2;
+    display: flex;
+    height: 100vh;
+    flex-direction: column;
+    margin: 0;
+    background-color: var(--bg);
+}
+
+.b {
+    --lnk: #465e73;
+    color: var(--lnk);
+    font-weight: 800;
+}
+
+div {
+    width: 49%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+ul {
+    display: flex;
+    margin: auto;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 0;
+}
+
+#main-renderer {
+    font-family: "IBM Plex Mono";
+    padding: 20px 0px;
+    font-size: 30px;
+    margin: auto;
+    width: 90%;
+    text-align: center;
+    line-height: 1.15;
+}
+
+.sesame-seeds {
+    --headers: #00010d;
+    color: var(--headers);
+    margin-bottom: 1;
+}
+
+.screenshot {
+    --bc: #a8b5bf;
+    border-style: hidden;
+    background-color: var(--bc);
+    border-radius: 5px;
+    padding: 15px;
+}
+
+.theme:active {
+    --hghltd: #728ca3;
+    background-color: var(--hghltd);
+}
+
+.fluff {
+    --text: #00010d;
+    color: var(--text);
+}
+
+#footer {
+    position: absolute;
+    bottom: 0;
+}
+#bottom-bun {
+    margin-top: auto;
+}
+canvas {
+    background-color: whitesmoke;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    margin: auto;
+    display: block;
+    width: 100%;
+    border-radius: 2%;
+}
