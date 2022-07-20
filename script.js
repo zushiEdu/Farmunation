@@ -10,6 +10,7 @@ function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, r
     this.inventory = inventory;
     this.reference = reference;
 }
+
 function tile(state, willGrow, tillGrown, yield, cropType) {
     this.state = state;
     this.willGrow = willGrow;
@@ -17,6 +18,7 @@ function tile(state, willGrow, tillGrown, yield, cropType) {
     this.yield = yield;
     this.cropType = cropType;
 }
+
 function vehicle(posx, posy, rotation, attachedImplement, implementAttached, fuel, name, aoX, aoY, inventory, reference) {
     this.posx = posx;
     this.posy = posy;
@@ -30,10 +32,12 @@ function vehicle(posx, posy, rotation, attachedImplement, implementAttached, fue
     this.inventory = inventory;
     this.reference = reference;
 }
+
 function item(name, amount) {
     this.name = name;
     this.amount = amount;
 }
+
 function prompt(posx, posy, width, height, elements) {
     this.posx = posx;
     this.posy = posy;
@@ -41,15 +45,18 @@ function prompt(posx, posy, width, height, elements) {
     this.height = height;
     this.elements = elements;
 }
+
 function element(text, action) {
     this.text = text;
     this.action = action;
 }
+
 function specialLocation(posx, posy, property) {
     this.posx = posx;
     this.posy = posy;
     this.property = property;
 }
+
 function machine(name, price, size, type, image, attachableTo) {
     this.name = name;
     this.price = price;
@@ -58,6 +65,7 @@ function machine(name, price, size, type, image, attachableTo) {
     this.image = image;
     this.attachableTo = attachableTo;
 }
+
 function prop(price, name) {
     this.price = price;
     this.name = name;
