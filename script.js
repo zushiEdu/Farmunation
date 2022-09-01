@@ -467,6 +467,19 @@ function applyImplements() {
     }
 }
 
+function rotatePointAroundPoint(x1, y1, x2, y2, angle) {
+    // Negatively Offset Dependant Point By Axis Point
+    var x3 = x1 - x2;
+    var y3 = y1 - y2;
+    // Rotate Dependant Point By Angle
+    var x4 = x3 * Math.cos(toRadian(angle)) - y3 * Math.sin(toRadian(angle));
+    var y4 = y3 * Math.cos(toRadian(angle)) + x3 * Math.sin(toRadian(angle));
+    // Positively Offset Dependant Point By Axis Point
+    var finalX = x2 + x4;
+    var finalY = y2 + y4;
+    // Return Rotated Point
+}
+
 function displayNormalPrompts() {
     for (var i = 0; i < normalPrompts.length; i++) {
         if (normalPrompts[i] != null) {
@@ -855,8 +868,6 @@ function input(key) {
                     }
                 }
             }
-            saveVariableToFile(implements, "implements");
-            saveVariableToFile(vehicles, "vehicles");
             break;
         case "c":
             showControls();
@@ -869,6 +880,11 @@ function input(key) {
                 buildPrompts[buildPrompts.length] = new prompt(50, 412, 412, 60, [new element("1. SellPoint | 2. Fence 1 | 3. Fence 2 | 4. Fence 3", null)]);
             }
             renderMap();
+            break;
+        case "k":
+            saveVariableToFile(implements, "implements");
+            saveVariableToFile(vehicles, "vehicles");
+            saveVariableToFile(blocks, "map");
             break;
     }
 
