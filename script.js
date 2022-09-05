@@ -1,4 +1,4 @@
-function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, reference) {
+function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, reference, machinesFunction) {
     this.posx = posx;
     this.posy = posy;
     this.rot = rot;
@@ -9,6 +9,7 @@ function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, r
     this.ay = ay;
     this.inventory = inventory;
     this.reference = reference;
+    this.machinesFunction = machinesFunction;
 }
 
 function tile(state, willGrow, tillGrown, yield, cropType) {
@@ -76,6 +77,11 @@ function pos2d(x, y) {
     this.y = y;
 }
 
+function machineFunction(initial, final) {
+    this.initial = initial;
+    this.final = final;
+}
+
 const spriteSize = 16;
 const c = document.getElementById("main");
 const button = document.querySelector("#main");
@@ -99,22 +105,6 @@ var chunkY = 0;
 const canvasSize = width / spriteSize;
 const mapSize = canvasSize * 8;
 const mapScale = 8;
-
-var tileImages = new Array();
-var amountOfCrops = 11;
-fillImageArray(tileImages, amountOfCrops);
-
-tileImages[0].src = `/${spriteSize}xSprites/Grass.png`;
-tileImages[1].src = `/${spriteSize}xSprites/Cultivated.png`;
-tileImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
-tileImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
-tileImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
-tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
-tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`;
-tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`;
-tileImages[8].src = `/${spriteSize}xSprites/Fence-Horizontal.png`;
-tileImages[9].src = `/${spriteSize}xSprites/Fence-Vertical.png`;
-tileImages[10].src = `/${spriteSize}xSprites/Fence-Cross.png`;
 
 var animalImages = new Array();
 var amountOfAnimals = 1;
@@ -164,14 +154,28 @@ var vehicles = new Array();
 
 var buildType = 7;
 
-var fps = 30;
+var tileImages = new Array();
+var amountOfCrops = 11;
+fillImageArray(tileImages, amountOfCrops);
+
+tileImages[0].src = `/${spriteSize}xSprites/Grass.png`; /////////////// 0 Grass
+tileImages[1].src = `/${spriteSize}xSprites/Cultivated.png`; ////////// 1 Cultivated
+tileImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`; /////// 2 Planted 1
+tileImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`; /////// 3 Planted 3
+tileImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`; /////// 4 Planted 5
+tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`; /////// 5 Planted 6
+tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`; /////////// 6 Harvested
+tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`; /////////// 7 Sellpoint
+tileImages[8].src = `/${spriteSize}xSprites/Fence-Horizontal.png`; //// 8 Fence
+tileImages[9].src = `/${spriteSize}xSprites/Fence-Vertical.png`; ////// 9 Fence
+tileImages[10].src = `/${spriteSize}xSprites/Fence-Cross.png`; /////// 10 Fence
 
 var purchaseableEquipment = new Array();
 // list of all the machines within the game
 // to add more machines add the sprite to the machines list above and add a purchaseable equipment item to the list below
 purchaseableEquipment[0] = new machine("Tractor", 50000, "Small", "vehicle", machines[0], null);
 purchaseableEquipment[1] = new machine("Harvester", 75000, "Small", "vehicle", machines[3], null);
-purchaseableEquipment[2] = new machine("Grain Header", 15000, "Small", "implement", machines[4], "Harvester");
+purchaseableEquipment[2] = new machine("Header", 15000, "Small", "implement", machines[4], "Harvester");
 purchaseableEquipment[3] = new machine("Disc Harrow", 25000, "Small", "implement", machines[1], "Tractor");
 purchaseableEquipment[4] = new machine("Planter", 25000, "Small", "implement", machines[2], "Tractor");
 purchaseableEquipment[5] = new machine("Grain Trailer", 25000, "Small", "implement", machines[6], "Tractor");
@@ -179,7 +183,18 @@ purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement
 purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7], "Tractor");
 purchaseableEquipment[8] = new machine("Spreader", 35000, "Large", "implement", machines[8], "Tractor");
 
+var machineFunctions = new Array();
+
+machineFunctions[0] = new machineFunction([0, 2, 3, 4, 5, 6], [1]); // Disc Harrow & Cultivators
+machineFunctions[1] = new machineFunction([1], [2]); // Planters & Seeders
+machineFunctions[2] = new machineFunction([5], [6]); // Headers
+machineFunctions[3] = new machineFunction([1, 2, 3, 4, 5, 6], null); // Spreaders & Sprayers
+
 var renderMode = "Setup";
+
+var fps = 60;
+
+var frame = 0;
 
 function setup() {
     if (vehicles[0] == null) {
@@ -210,6 +225,16 @@ function update() {
         updateMap();
         paintMachines();
         buildUserInterface();
+    }
+
+    computeFrame();
+}
+
+function computeFrame() {
+    if (frame >= fps) {
+        frame = fps - frame;
+    } else {
+        frame++;
     }
 }
 
@@ -363,39 +388,27 @@ function applyImplements() {
             var activeImplement = implements[vehicles[activeVehicle].attachedImplement];
             switch (implements[vehicles[activeVehicle].attachedImplement].name) {
                 case "Planter":
-                    console.log(trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX));
-                    var y = trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX).y;
-                    var x = trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX).x;
-                    blocks[y][x].state = 1;
+                    applyImplement(activeImplement, vehicles[activeVehicle]);
                     break;
             }
         }
     }
 }
 
-function trigModifier(target, angle, offset) {
-    if (offset >= 1) {
-        var modifiedPositions = new Array();
-        for (var i = 0; i < 3; i++) {
-            modifiedPositions[i] = new pos2d(target.posx + offset * Math.cos(toRadian(angle + i * 90)), target.posy + offset * Math.sin(toRadian(angle + i * 90)));
-        }
-        return modifiedPositions;
-    } else {
-        return new pos2d(target.posx, target.posy);
-    }
+function applyImplement(target, source) {
+    var cowPos = rotatePointAroundPoint(new pos2d(4, 5), new pos2d(5, 5), frame * (360 / fps));
+    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, 0);
 }
 
-function rotatePointAroundPoint(x1, y1, x2, y2, angle) {
+function rotatePointAroundPoint(originalPoint, axis, angle) {
     // Negatively Offset Dependant Point By Axis Point
-    var x3 = x1 - x2;
-    var y3 = y1 - y2;
+    var point3 = new pos2d(originalPoint.x - axis.x, originalPoint.y - axis.y);
     // Rotate Dependant Point By Angle
-    var x4 = x3 * Math.cos(toRadian(angle)) - y3 * Math.sin(toRadian(angle));
-    var y4 = y3 * Math.cos(toRadian(angle)) + x3 * Math.sin(toRadian(angle));
+    var point4 = new pos2d(point3.x * Math.cos(toRadian(angle)) - point3.y * Math.sin(toRadian(angle)), point3.y * Math.cos(toRadian(angle)) + point3.x * Math.sin(toRadian(angle)));
     // Positively Offset Dependant Point By Axis Point
-    var finalX = x2 + x4;
-    var finalY = y2 + y4;
+    var finalPoint = new pos2d(axis.x + point4.x, axis.y + point4.y);
     // Return Rotated Point
+    return finalPoint;
 }
 
 function displayNormalPrompts() {
@@ -804,6 +817,18 @@ function input(key) {
             saveVariableToFile(vehicles, "vehicles");
             saveVariableToFile(blocks, "map");
             break;
+        case "1":
+            fps = 15;
+            break;
+        case "2":
+            fps = 30;
+            break;
+        case "3":
+            fps = 60;
+            break;
+        case "4":
+            fps = 120;
+            break;
     }
 
     if (renderMode == "Build") {
@@ -840,11 +865,26 @@ function buyEquipment(machine) {
                 farmMoney -= machine.price;
             }
         } else if (machine.type == "implement") {
+            var functionOfTool;
+            switch (machine.name) {
+                case "Disc Harrow":
+                    functionOfTool = machineFunctions[0];
+                    break;
+                case "Planter":
+                    functionOfTool = machineFunctions[1];
+                    break;
+                case "Header":
+                    functionOfTool = machineFunctions[2];
+                    break;
+                case "Spreader":
+                    functionOfTool = machineFunctions[3];
+                    break;
+            }
             if (machine.size == "Small") {
-                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 0, 0, null, machine);
+                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 0, 0, null, machine, functionOfTool);
                 farmMoney -= machine.price;
             } else if (machine.size == "Large") {
-                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, -1, 1, null, machine);
+                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 1, 0, null, machine, functionOfTool);
                 farmMoney -= machine.price;
             }
         }
