@@ -71,6 +71,11 @@ function prop(price, name) {
     this.name = name;
 }
 
+function pos2d(x, y) {
+    this.x = x;
+    this.y = y;
+}
+
 const spriteSize = 16;
 const c = document.getElementById("main");
 const button = document.querySelector("#main");
@@ -355,115 +360,28 @@ function displayFarmMoney() {
 function applyImplements() {
     if (vehicles[activeVehicle].implementAttached) {
         if (implements[vehicles[activeVehicle].attachedImplement].active) {
-            var ax = implements[vehicles[activeVehicle].attachedImplement].ax;
-            var ay = implements[vehicles[activeVehicle].attachedImplement].ay;
-
-            if (
-                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 0 ||
-                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 6 ||
-                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2 ||
-                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1
-            ) {
-                // cultivate land
-                if (implements[vehicles[activeVehicle].attachedImplement].name == "Disc Harrow") {
-                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(1, false, null, null, "Cultivated");
-                    if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
-                        blocks[
-                            implements[vehicles[activeVehicle].attachedImplement].posy +
-                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                        ][
-                            implements[vehicles[activeVehicle].attachedImplement].posx -
-                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                        ] = new tile(1, false, null, null, "Cultivated");
-                        blocks[
-                            implements[vehicles[activeVehicle].attachedImplement].posy -
-                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                        ][
-                            implements[vehicles[activeVehicle].attachedImplement].posx +
-                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                        ] = new tile(1, false, null, null, "Cultivated");
-                    }
-                }
-            } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2) {
-                // fertilize crop
-                if (implements[vehicles[activeVehicle].attachedImplement].name == "Sprayer") {
-                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
-                        2,
-                        true,
-                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield + 0.25,
-                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].cropType
-                    );
-                }
-            } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 5) {
-                if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Header") {
-                    if (vehicles[activeVehicle].inventory == null) {
-                        vehicles[activeVehicle].inventory = new item("Grain", 0);
-                    }
-                    if (vehicles[activeVehicle].inventory.name == "Grain") {
-                        vehicles[activeVehicle].inventory.amount +=
-                            1 * blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield;
-
-                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(6, false, null, null);
-                    }
-                }
-                // harvest crop
-                // calculate yield and what to deposit based on crop type
-            }
-
-            // plant crop on land
-            if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
-                if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
-                    if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1) {
-                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
-                            2,
-                            true,
-                            5,
-                            0.5,
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.name
-                        );
-                        implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
-                    }
-                    if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
-                        if (
-                            blocks[
-                                implements[vehicles[activeVehicle].attachedImplement].posy +
-                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ][
-                                implements[vehicles[activeVehicle].attachedImplement].posx -
-                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ].state == 1
-                        ) {
-                            blocks[
-                                implements[vehicles[activeVehicle].attachedImplement].posy +
-                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ][
-                                implements[vehicles[activeVehicle].attachedImplement].posx -
-                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
-                        }
-                        if (
-                            blocks[
-                                implements[vehicles[activeVehicle].attachedImplement].posy -
-                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ][
-                                implements[vehicles[activeVehicle].attachedImplement].posx +
-                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ].state == 1
-                        ) {
-                            blocks[
-                                implements[vehicles[activeVehicle].attachedImplement].posy -
-                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ][
-                                implements[vehicles[activeVehicle].attachedImplement].posx +
-                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
-                            ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
-                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
-                        }
-                    }
-                }
+            var activeImplement = implements[vehicles[activeVehicle].attachedImplement];
+            switch (implements[vehicles[activeVehicle].attachedImplement].name) {
+                case "Planter":
+                    console.log(trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX));
+                    var y = trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX).y;
+                    var x = trigModifier(activeImplement, vehicles[activeVehicle].rotation, activeImplement.aoX).x;
+                    blocks[y][x].state = 1;
+                    break;
             }
         }
+    }
+}
+
+function trigModifier(target, angle, offset) {
+    if (offset >= 1) {
+        var modifiedPositions = new Array();
+        for (var i = 0; i < 3; i++) {
+            modifiedPositions[i] = new pos2d(target.posx + offset * Math.cos(toRadian(angle + i * 90)), target.posy + offset * Math.sin(toRadian(angle + i * 90)));
+        }
+        return modifiedPositions;
+    } else {
+        return new pos2d(target.posx, target.posy);
     }
 }
 
