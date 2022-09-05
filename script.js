@@ -397,7 +397,7 @@ function applyImplements() {
 
 function applyImplement(target, source) {
     var cowPos = rotatePointAroundPoint(new pos2d(4, 5), new pos2d(5, 5), frame * (360 / fps));
-    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, 0);
+    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, frame * (360 / fps) - 90);
 }
 
 function rotatePointAroundPoint(originalPoint, axis, angle) {
@@ -828,6 +828,9 @@ function input(key) {
             break;
         case "4":
             fps = 120;
+            break;
+        case "5":
+            fps = 240;
             break;
     }
 
