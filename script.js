@@ -192,7 +192,10 @@ machineFunctions[3] = new machineFunction([1, 2, 3, 4, 5, 6], [-0.5]); // Spread
 
 var renderMode = "Setup";
 
-var fps = 60;
+var debugOn = false;
+
+var targetFps = 60;
+var actualFps;
 
 var frame = 0;
 
@@ -213,6 +216,7 @@ function setup() {
     setTimeout(renderMap, 100);
 }
 
+var lastLoop = performance.now();
 function update() {
     if (renderMode == "Setup") {
         normalUserInterface();
@@ -227,12 +231,20 @@ function update() {
         buildUserInterface();
     }
 
+    if (debugOn) {
+        debugMenu();
+    }
+
     computeFrame();
+
+    var thisLoop = performance.now();
+    actualFps = 1000 / (thisLoop - lastLoop);
+    lastLoop = thisLoop;
 }
 
 function computeFrame() {
-    if (frame >= fps) {
-        frame = fps - frame;
+    if (frame >= targetFps) {
+        frame = targetFps - frame;
     } else {
         frame++;
     }
@@ -414,8 +426,8 @@ function applyImplement(target, source) {
 }
 
 function spinCow(location2D) {
-    var cowPos = rotatePointAroundPoint(new pos2d(location2D.x - 1, location2D.y), location2D, frame * (360 / fps));
-    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, frame * (360 / fps) - 90);
+    var cowPos = rotatePointAroundPoint(new pos2d(location2D.x - 1, location2D.y), location2D, frame * (360 / targetFps));
+    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, frame * (360 / targetFps) - 90);
 }
 
 function rotatePointAroundPoint(originalPoint, axis, angle) {
@@ -836,22 +848,26 @@ function input(key) {
             saveVariableToFile(blocks, "map");
             break;
         case "1":
-            fps = 15;
+            targetFps = 15;
             break;
         case "2":
-            fps = 30;
+            targetFps = 30;
             break;
         case "3":
-            fps = 60;
+            targetFps = 60;
             break;
         case "4":
-            fps = 120;
+            targetFps = 120;
             break;
         case "5":
-            fps = 1000;
+            targetFps = 1000;
             break;
         case "0":
-            debugMenu();
+            if (debugOn) {
+                debugOn = false;
+            } else {
+                debugOn = true;
+            }
     }
 
     if (renderMode == "Build") {
@@ -869,8 +885,9 @@ function input(key) {
 }
 
 function debugMenu() {
+    drawRect(15, 25, 35, 45, 0, 0, 0);
     drawText(frame, 20, 40, 255, 255, 255);
-    drawText(fps, 20, 60);
+    drawText(Math.round(actualFps), 20, 60);
 }
 
 function saveVariableToFile(variable, saveName) {
@@ -1000,9 +1017,11 @@ function findSlope(y2, y1, x2, x1) {
 }
 
 function drawRect(x1, y1, x2, y2, r, g, b) {
-    painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
     painter.beginPath();
-    painter.fillRect(x1, y1, x2, y2);
+    painter.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
+    painter.rect(x1, y1, x2, y2);
+    painter.stroke();
+    painter.fill();
     painter.closePath();
 }
 
@@ -1075,4 +1094,4 @@ document.onmousemove = function (event) {
 };
 
 setup();
-setInterval(update, 1 / fps);
+setInterval(update, 1 / targetFps);
