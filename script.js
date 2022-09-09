@@ -391,6 +391,7 @@ function applyImplements() {
     }
 }
 
+// to fix the bugged rendering and application of implements digitally offset where the implements left bound is and rendering starts by its ax and ay offset
 function applyImplement(target, source) {
     if (target.ax >= 1 || target.ay >= 1) {
         // Non small implement
@@ -847,8 +848,10 @@ function input(key) {
             fps = 120;
             break;
         case "5":
-            fps = 240;
+            fps = 1000;
             break;
+        case "0":
+            debugMenu();
     }
 
     if (renderMode == "Build") {
@@ -863,6 +866,11 @@ function input(key) {
             buildType = "bulldoze";
         }
     }
+}
+
+function debugMenu() {
+    drawText(frame, 20, 40, 255, 255, 255);
+    drawText(fps, 20, 60);
 }
 
 function saveVariableToFile(variable, saveName) {
