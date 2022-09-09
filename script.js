@@ -188,7 +188,7 @@ var machineFunctions = new Array();
 machineFunctions[0] = new machineFunction([0, 2, 3, 4, 5, 6], [1]); // Disc Harrow & Cultivators
 machineFunctions[1] = new machineFunction([1], [2]); // Planters & Seeders
 machineFunctions[2] = new machineFunction([5], [6]); // Headers
-machineFunctions[3] = new machineFunction([1, 2, 3, 4, 5, 6], null); // Spreaders & Sprayers
+machineFunctions[3] = new machineFunction([1, 2, 3, 4, 5, 6], [-0.5]); // Spreaders & Sprayers
 
 var renderMode = "Setup";
 
@@ -311,13 +311,9 @@ function paintMachine(object) {
     var osY = chunkY * spriteSize * canvasSize;
 
     if (object.reference.type == "implement") {
-        if (object.ax != 0 && object.ay != 0) {
-            paintImage(
-                object.reference.image,
-                spriteSize * (object.posx - object.ax * Math.cos(toRadian(object.rot))) - osX,
-                spriteSize * (object.posy + object.ay * Math.sin(toRadian(object.rot))) - osY,
-                object.rot
-            );
+        if (object.ax >= 0 || object.ay >= 0) {
+            var implementPos = rotatePointAroundPoint(new pos2d(object.posx, object.posy), new pos2d(object.posx + object.ax, object.posy + 1), object.rot);
+            paintImage(object.reference.image, spriteSize * implementPos.x - osX, spriteSize * implementPos.y - osY, object.rot);
         } else {
             paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rot);
         }
@@ -396,7 +392,28 @@ function applyImplements() {
 }
 
 function applyImplement(target, source) {
-    var cowPos = rotatePointAroundPoint(new pos2d(4, 5), new pos2d(5, 5), frame * (360 / fps));
+    if (target.ax >= 1 || target.ay >= 1) {
+        // Non small implement
+        var tilesCovered = new Array();
+        for (var i = -target.ax; i <= target.ax; i++) {
+            // tilesCovered[i] = new pos2d(target.posx + i, target.posy + target.ay);
+            tilesCovered[i + 1] = rotatePointAroundPoint(new pos2d(target.posx + i, target.posy + target.ay), new pos2d(source.posx, source.posy), target.rot);
+        }
+        console.log(tilesCovered);
+    } else {
+        // Small implement
+        if (target.machinesFunction.initial.includes(blocks[target.posy][target.posx].state)) {
+            if (target.machineFunction.final >= 0) {
+                blocks[target.posy][target.posx].state = target.machineFunction.final;
+            } else {
+                blocks[target.posy][target.posx].yield += target.machineFunction.final * -1;
+            }
+        }
+    }
+}
+
+function spinCow(location2D) {
+    var cowPos = rotatePointAroundPoint(new pos2d(location2D.x - 1, location2D.y), location2D, frame * (360 / fps));
     paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, frame * (360 / fps) - 90);
 }
 
