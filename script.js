@@ -267,12 +267,12 @@ function screenshot() {
 
 function adjustChunk() {
     if (chunkX != Math.floor(vehicles[activeVehicle].posx / canvasSize)) {
-        renderMap();
         chunkX = Math.floor(vehicles[activeVehicle].posx / canvasSize);
+        renderMap();
     }
     if (chunkY != Math.floor(vehicles[activeVehicle].posy / canvasSize)) {
-        renderMap();
         chunkY = Math.floor(vehicles[activeVehicle].posy / canvasSize);
+        renderMap();
     }
 }
 
@@ -324,7 +324,7 @@ function paintMachine(object) {
 
     if (object.reference.type == "implement") {
         if (object.ax >= 0 || object.ay >= 0) {
-            var implementPos = rotatePointAroundPoint(new pos2d(object.posx, object.posy), new pos2d(object.posx + object.ax, object.posy + 1), object.rot);
+            var implementPos = rotatePointAroundPoint(new pos2d(object.posx, object.posy), new pos2d(object.posx + object.ax, object.posy - object.ay), object.rot);
             paintImage(object.reference.image, spriteSize * implementPos.x - osX, spriteSize * implementPos.y - osY, object.rot);
         } else {
             paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rot);
@@ -396,7 +396,7 @@ function applyImplements() {
             var activeImplement = implements[vehicles[activeVehicle].attachedImplement];
             switch (implements[vehicles[activeVehicle].attachedImplement].name) {
                 case "Planter":
-                    applyImplement(activeImplement, vehicles[activeVehicle]);
+                    console.log(applyImplement(activeImplement, vehicles[activeVehicle]));
                     break;
             }
         }
@@ -405,23 +405,27 @@ function applyImplements() {
 
 // to fix the bugged rendering and application of implements digitally offset where the implements left bound is and rendering starts by its ax and ay offset
 function applyImplement(target, source) {
+    var tilesCovered = new Array();
     if (target.ax >= 1 || target.ay >= 1) {
         // Non small implement
-        var tilesCovered = new Array();
         for (var i = -target.ax; i <= target.ax; i++) {
             // tilesCovered[i] = new pos2d(target.posx + i, target.posy + target.ay);
-            tilesCovered[i + 1] = rotatePointAroundPoint(new pos2d(target.posx + i, target.posy + target.ay), new pos2d(source.posx, source.posy), target.rot);
+            tilesCovered[i + 1] = rotatePointAroundPoint(new pos2d(target.posx - target.ax * i, target.posy + target.ay), new pos2d(source.posx, source.posy), target.rot);
         }
-        console.log(tilesCovered);
+        return tilesCovered;
     } else {
         // Small implement
-        if (target.machinesFunction.initial.includes(blocks[target.posy][target.posx].state)) {
-            if (target.machineFunction.final >= 0) {
-                blocks[target.posy][target.posx].state = target.machineFunction.final;
-            } else {
-                blocks[target.posy][target.posx].yield += target.machineFunction.final * -1;
-            }
-        }
+        // put this code in apply implements section
+        // if (target.machinesFunction.initial.includes(blocks[target.posy][target.posx].state)) {
+        //     if (target.machineFunction.final >= 0) {
+        //         blocks[target.posy][target.posx].state = target.machineFunction.final;
+        //     } else {
+        //         blocks[target.posy][target.posx].yield += target.machineFunction.final * -1;
+        //     }
+        // }
+
+        tilesCovered[0] = new pos2d(target.posx, target.posy);
+        return tilesCovered;
     }
 }
 
