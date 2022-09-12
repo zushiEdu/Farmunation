@@ -1,4 +1,4 @@
-function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, reference, machinesFunction) {
+function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, reference) {
     this.posx = posx;
     this.posy = posy;
     this.rot = rot;
@@ -9,7 +9,6 @@ function implement(posx, posy, rot, active, name, toolType, ax, ay, inventory, r
     this.ay = ay;
     this.inventory = inventory;
     this.reference = reference;
-    this.machinesFunction = machinesFunction;
 }
 
 function tile(state, willGrow, tillGrown, yield, cropType) {
@@ -72,16 +71,6 @@ function prop(price, name) {
     this.name = name;
 }
 
-function pos2d(x, y) {
-    this.x = x;
-    this.y = y;
-}
-
-function machineFunction(initial, final) {
-    this.initial = initial;
-    this.final = final;
-}
-
 const spriteSize = 16;
 const c = document.getElementById("main");
 const button = document.querySelector("#main");
@@ -105,6 +94,22 @@ var chunkY = 0;
 const canvasSize = width / spriteSize;
 const mapSize = canvasSize * 8;
 const mapScale = 8;
+
+var tileImages = new Array();
+var amountOfCrops = 11;
+fillImageArray(tileImages, amountOfCrops);
+
+tileImages[0].src = `/${spriteSize}xSprites/Grass.png`;
+tileImages[1].src = `/${spriteSize}xSprites/Cultivated.png`;
+tileImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`;
+tileImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`;
+tileImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`;
+tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`;
+tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`;
+tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`;
+tileImages[8].src = `/${spriteSize}xSprites/Fence-Horizontal.png`;
+tileImages[9].src = `/${spriteSize}xSprites/Fence-Vertical.png`;
+tileImages[10].src = `/${spriteSize}xSprites/Fence-Cross.png`;
 
 var animalImages = new Array();
 var amountOfAnimals = 1;
@@ -154,28 +159,14 @@ var vehicles = new Array();
 
 var buildType = 7;
 
-var tileImages = new Array();
-var amountOfCrops = 11;
-fillImageArray(tileImages, amountOfCrops);
-
-tileImages[0].src = `/${spriteSize}xSprites/Grass.png`; /////////////// 0 Grass
-tileImages[1].src = `/${spriteSize}xSprites/Cultivated.png`; ////////// 1 Cultivated
-tileImages[2].src = `/${spriteSize}xSprites/PlantedStage1.png`; /////// 2 Planted 1
-tileImages[3].src = `/${spriteSize}xSprites/PlantedStage3.png`; /////// 3 Planted 3
-tileImages[4].src = `/${spriteSize}xSprites/PlantedStage5.png`; /////// 4 Planted 5
-tileImages[5].src = `/${spriteSize}xSprites/PlantedStage6.png`; /////// 5 Planted 6
-tileImages[6].src = `/${spriteSize}xSprites/Harvested.png`; /////////// 6 Harvested
-tileImages[7].src = `/${spriteSize}xSprites/SellPoint.png`; /////////// 7 Sellpoint
-tileImages[8].src = `/${spriteSize}xSprites/Fence-Horizontal.png`; //// 8 Fence
-tileImages[9].src = `/${spriteSize}xSprites/Fence-Vertical.png`; ////// 9 Fence
-tileImages[10].src = `/${spriteSize}xSprites/Fence-Cross.png`; /////// 10 Fence
+var fps = 30;
 
 var purchaseableEquipment = new Array();
 // list of all the machines within the game
 // to add more machines add the sprite to the machines list above and add a purchaseable equipment item to the list below
 purchaseableEquipment[0] = new machine("Tractor", 50000, "Small", "vehicle", machines[0], null);
 purchaseableEquipment[1] = new machine("Harvester", 75000, "Small", "vehicle", machines[3], null);
-purchaseableEquipment[2] = new machine("Header", 15000, "Small", "implement", machines[4], "Harvester");
+purchaseableEquipment[2] = new machine("Grain Header", 15000, "Small", "implement", machines[4], "Harvester");
 purchaseableEquipment[3] = new machine("Disc Harrow", 25000, "Small", "implement", machines[1], "Tractor");
 purchaseableEquipment[4] = new machine("Planter", 25000, "Small", "implement", machines[2], "Tractor");
 purchaseableEquipment[5] = new machine("Grain Trailer", 25000, "Small", "implement", machines[6], "Tractor");
@@ -183,21 +174,7 @@ purchaseableEquipment[6] = new machine("Disc Harrow", 50000, "Large", "implement
 purchaseableEquipment[7] = new machine("Planter", 50000, "Large", "implement", machines[7], "Tractor");
 purchaseableEquipment[8] = new machine("Spreader", 35000, "Large", "implement", machines[8], "Tractor");
 
-var machineFunctions = new Array();
-
-machineFunctions[0] = new machineFunction([0, 2, 3, 4, 5, 6], [1]); // Disc Harrow & Cultivators
-machineFunctions[1] = new machineFunction([1], [2]); // Planters & Seeders
-machineFunctions[2] = new machineFunction([5], [6]); // Headers
-machineFunctions[3] = new machineFunction([1, 2, 3, 4, 5, 6], [-0.5]); // Spreaders & Sprayers
-
 var renderMode = "Setup";
-
-var debugOn = false;
-
-var targetFps = 60;
-var actualFps;
-
-var frame = 0;
 
 function setup() {
     if (vehicles[0] == null) {
@@ -216,7 +193,6 @@ function setup() {
     setTimeout(renderMap, 100);
 }
 
-var lastLoop = performance.now();
 function update() {
     if (renderMode == "Setup") {
         normalUserInterface();
@@ -229,24 +205,6 @@ function update() {
         updateMap();
         paintMachines();
         buildUserInterface();
-    }
-
-    if (debugOn) {
-        debugMenu();
-    }
-
-    computeFrame();
-
-    var thisLoop = performance.now();
-    actualFps = 1000 / (thisLoop - lastLoop);
-    lastLoop = thisLoop;
-}
-
-function computeFrame() {
-    if (frame >= targetFps) {
-        frame = targetFps - frame;
-    } else {
-        frame++;
     }
 }
 
@@ -323,9 +281,13 @@ function paintMachine(object) {
     var osY = chunkY * spriteSize * canvasSize;
 
     if (object.reference.type == "implement") {
-        if (object.ax >= 0 || object.ay >= 0) {
-            var implementPos = rotatePointAroundPoint(new pos2d(object.posx, object.posy), new pos2d(object.posx + object.ax, object.posy + 1), object.rot);
-            paintImage(object.reference.image, spriteSize * implementPos.x - osX, spriteSize * implementPos.y - osY, object.rot);
+        if (object.ax != 0 && object.ay != 0) {
+            paintImage(
+                object.reference.image,
+                spriteSize * (object.posx - object.ax * Math.cos(toRadian(object.rot))) - osX,
+                spriteSize * (object.posy + object.ay * Math.sin(toRadian(object.rot))) - osY,
+                object.rot
+            );
         } else {
             paintImage(object.reference.image, spriteSize * object.posx - osX, spriteSize * object.posy - osY, object.rot);
         }
@@ -393,52 +355,116 @@ function displayFarmMoney() {
 function applyImplements() {
     if (vehicles[activeVehicle].implementAttached) {
         if (implements[vehicles[activeVehicle].attachedImplement].active) {
-            var activeImplement = implements[vehicles[activeVehicle].attachedImplement];
-            switch (implements[vehicles[activeVehicle].attachedImplement].name) {
-                case "Planter":
-                    applyImplement(activeImplement, vehicles[activeVehicle]);
-                    break;
+            var ax = implements[vehicles[activeVehicle].attachedImplement].ax;
+            var ay = implements[vehicles[activeVehicle].attachedImplement].ay;
+
+            if (
+                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 0 ||
+                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 6 ||
+                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2 ||
+                blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1
+            ) {
+                // cultivate land
+                if (implements[vehicles[activeVehicle].attachedImplement].name == "Disc Harrow") {
+                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(1, false, null, null, "Cultivated");
+                    if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
+                        blocks[
+                            implements[vehicles[activeVehicle].attachedImplement].posy +
+                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                        ][
+                            implements[vehicles[activeVehicle].attachedImplement].posx -
+                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                        ] = new tile(1, false, null, null, "Cultivated");
+                        blocks[
+                            implements[vehicles[activeVehicle].attachedImplement].posy -
+                                implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                        ][
+                            implements[vehicles[activeVehicle].attachedImplement].posx +
+                                implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                        ] = new tile(1, false, null, null, "Cultivated");
+                    }
+                }
+            } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 2) {
+                // fertilize crop
+                if (implements[vehicles[activeVehicle].attachedImplement].name == "Sprayer") {
+                    blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
+                        2,
+                        true,
+                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield + 0.25,
+                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].cropType
+                    );
+                }
+            } else if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 5) {
+                if (implements[vehicles[activeVehicle].attachedImplement].name == "Grain Header") {
+                    if (vehicles[activeVehicle].inventory == null) {
+                        vehicles[activeVehicle].inventory = new item("Grain", 0);
+                    }
+                    if (vehicles[activeVehicle].inventory.name == "Grain") {
+                        vehicles[activeVehicle].inventory.amount +=
+                            1 * blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].yield;
+
+                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(6, false, null, null);
+                    }
+                }
+                // harvest crop
+                // calculate yield and what to deposit based on crop type
+            }
+
+            // plant crop on land
+            if (implements[vehicles[activeVehicle].attachedImplement].name == "Planter") {
+                if (implements[vehicles[activeVehicle].attachedImplement].inventory.amount >= 1) {
+                    if (blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx].state == 1) {
+                        blocks[implements[vehicles[activeVehicle].attachedImplement].posy][implements[vehicles[activeVehicle].attachedImplement].posx] = new tile(
+                            2,
+                            true,
+                            5,
+                            0.5,
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.name
+                        );
+                        implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                    }
+                    if (implements[vehicles[activeVehicle].attachedImplement].ax != 0) {
+                        if (
+                            blocks[
+                                implements[vehicles[activeVehicle].attachedImplement].posy +
+                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ][
+                                implements[vehicles[activeVehicle].attachedImplement].posx -
+                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ].state == 1
+                        ) {
+                            blocks[
+                                implements[vehicles[activeVehicle].attachedImplement].posy +
+                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ][
+                                implements[vehicles[activeVehicle].attachedImplement].posx -
+                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                        }
+                        if (
+                            blocks[
+                                implements[vehicles[activeVehicle].attachedImplement].posy -
+                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ][
+                                implements[vehicles[activeVehicle].attachedImplement].posx +
+                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ].state == 1
+                        ) {
+                            blocks[
+                                implements[vehicles[activeVehicle].attachedImplement].posy -
+                                    implements[vehicles[activeVehicle].attachedImplement].ay * Math.round(Math.sin(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ][
+                                implements[vehicles[activeVehicle].attachedImplement].posx +
+                                    implements[vehicles[activeVehicle].attachedImplement].ax * Math.round(Math.cos(toRadian(implements[vehicles[activeVehicle].attachedImplement].rot)))
+                            ] = new tile(2, true, 5, 0.5, implements[vehicles[activeVehicle].attachedImplement].inventory.name);
+                            implements[vehicles[activeVehicle].attachedImplement].inventory.amount -= 1;
+                        }
+                    }
+                }
             }
         }
     }
-}
-
-// to fix the bugged rendering and application of implements digitally offset where the implements left bound is and rendering starts by its ax and ay offset
-function applyImplement(target, source) {
-    if (target.ax >= 1 || target.ay >= 1) {
-        // Non small implement
-        var tilesCovered = new Array();
-        for (var i = -target.ax; i <= target.ax; i++) {
-            // tilesCovered[i] = new pos2d(target.posx + i, target.posy + target.ay);
-            tilesCovered[i + 1] = rotatePointAroundPoint(new pos2d(target.posx + i, target.posy + target.ay), new pos2d(source.posx, source.posy), target.rot);
-        }
-        console.log(tilesCovered);
-    } else {
-        // Small implement
-        if (target.machinesFunction.initial.includes(blocks[target.posy][target.posx].state)) {
-            if (target.machineFunction.final >= 0) {
-                blocks[target.posy][target.posx].state = target.machineFunction.final;
-            } else {
-                blocks[target.posy][target.posx].yield += target.machineFunction.final * -1;
-            }
-        }
-    }
-}
-
-function spinCow(location2D) {
-    var cowPos = rotatePointAroundPoint(new pos2d(location2D.x - 1, location2D.y), location2D, frame * (360 / targetFps));
-    paintImage(animalImages[0], cowPos.x * spriteSize, cowPos.y * spriteSize, frame * (360 / targetFps) - 90);
-}
-
-function rotatePointAroundPoint(originalPoint, axis, angle) {
-    // Negatively Offset Dependant Point By Axis Point
-    var point3 = new pos2d(originalPoint.x - axis.x, originalPoint.y - axis.y);
-    // Rotate Dependant Point By Angle
-    var point4 = new pos2d(point3.x * Math.cos(toRadian(angle)) - point3.y * Math.sin(toRadian(angle)), point3.y * Math.cos(toRadian(angle)) + point3.x * Math.sin(toRadian(angle)));
-    // Positively Offset Dependant Point By Axis Point
-    var finalPoint = new pos2d(axis.x + point4.x, axis.y + point4.y);
-    // Return Rotated Point
-    return finalPoint;
 }
 
 function displayNormalPrompts() {
@@ -829,6 +855,8 @@ function input(key) {
                     }
                 }
             }
+            saveVariableToFile(implements, "implements");
+            saveVariableToFile(vehicles, "vehicles");
             break;
         case "c":
             showControls();
@@ -842,32 +870,6 @@ function input(key) {
             }
             renderMap();
             break;
-        case "k":
-            saveVariableToFile(implements, "implements");
-            saveVariableToFile(vehicles, "vehicles");
-            saveVariableToFile(blocks, "map");
-            break;
-        case "1":
-            targetFps = 15;
-            break;
-        case "2":
-            targetFps = 30;
-            break;
-        case "3":
-            targetFps = 60;
-            break;
-        case "4":
-            targetFps = 120;
-            break;
-        case "5":
-            targetFps = 1000;
-            break;
-        case "0":
-            if (debugOn) {
-                debugOn = false;
-            } else {
-                debugOn = true;
-            }
     }
 
     if (renderMode == "Build") {
@@ -882,12 +884,6 @@ function input(key) {
             buildType = "bulldoze";
         }
     }
-}
-
-function debugMenu() {
-    drawRect(15, 25, 35, 45, 0, 0, 0);
-    drawText(frame, 20, 40, 255, 255, 255);
-    drawText(Math.round(actualFps), 20, 60);
 }
 
 function saveVariableToFile(variable, saveName) {
@@ -910,26 +906,11 @@ function buyEquipment(machine) {
                 farmMoney -= machine.price;
             }
         } else if (machine.type == "implement") {
-            var functionOfTool;
-            switch (machine.name) {
-                case "Disc Harrow":
-                    functionOfTool = machineFunctions[0];
-                    break;
-                case "Planter":
-                    functionOfTool = machineFunctions[1];
-                    break;
-                case "Header":
-                    functionOfTool = machineFunctions[2];
-                    break;
-                case "Spreader":
-                    functionOfTool = machineFunctions[3];
-                    break;
-            }
             if (machine.size == "Small") {
-                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 0, 0, null, machine, functionOfTool);
+                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 0, 0, null, machine);
                 farmMoney -= machine.price;
             } else if (machine.size == "Large") {
-                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, 1, 0, null, machine, functionOfTool);
+                implements[implements.length] = new implement(30, 3, -90, null, machine.name, machine.attachableTo, -1, 1, null, machine);
                 farmMoney -= machine.price;
             }
         }
@@ -1017,11 +998,9 @@ function findSlope(y2, y1, x2, x1) {
 }
 
 function drawRect(x1, y1, x2, y2, r, g, b) {
+    painter.strokeStyle = "rgb(" + r + "," + g + "," + b + ")";
     painter.beginPath();
-    painter.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-    painter.rect(x1, y1, x2, y2);
-    painter.stroke();
-    painter.fill();
+    painter.fillRect(x1, y1, x2, y2);
     painter.closePath();
 }
 
@@ -1094,4 +1073,4 @@ document.onmousemove = function (event) {
 };
 
 setup();
-setInterval(update, 1 / targetFps);
+setInterval(update, 1 / fps);
