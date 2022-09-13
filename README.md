@@ -1,2 +1,2 @@
 # Farmunation
- [Live Website](https://farmunation.000webhostapp.com/), last updated June 27th
+ [Live Website](https://farmunation.netlify.app/), last updated June 27th
